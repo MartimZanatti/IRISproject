@@ -13,34 +13,37 @@ emb_model = load_word_2_vec(model_name)
 
 
 def join_all_stanza_sentences(paragraphs):
-    stanza_sentences = [] # lista com as sentences dos paragrafos todas juntas
-    ids_list = {} # dicionario onde a chave é o id do paragrafo e tem uma lista com os ids das frases contidas no paragrafo
+    ids_dict = {} # dicionario onde a chave é o id do paragrafo e tem uma lista com os ids das frases contidas no paragrafo
     sentence_id = 1
+    stanza_text = []
     for p in paragraphs:
         if p.sumarizable == True:
-            ids_list[str(p.paragraph_id)] = []
+            ids_dict[str(p.id)] = []
             for s in list(p.stanza_text.sentences):
-                ids_list[str(p.paragraph_id)].append(sentence_id)
-                stanza_sentences.append(s)
-                sentence_id += 1
-    return stanza_sentences, ids_list
+                text = get_stanza_text(s)
+                if text:
+                    stanza_text.append(text)
+                    ids_dict[str(p.id)].append(sentence_id)
+                    sentence_id += 1
+    return stanza_text, ids_dict
 
-def stanza_list_of_sentences(stanza_sentences):
-    stanza_text = []
-    for sentence in stanza_sentences:
-        text = ''
-        for word in sentence.words:
-            text += word.lemma + ' '
-        if not check_bad_sentences_division(text):
-            stanza_text.append(text)
-    return stanza_text
+def get_stanza_text(sentence):
+    text = ''
+    for word in sentence.words:
+        text += word.lemma + ' '
+    if not check_bad_sentences_division(text):
+        return text
+    else:
+        return False
+
 
 
 
 
 def create_sim_matrix_word_2_vec(paragraphs):
-    stanza_sentences, ids_list = join_all_stanza_sentences(paragraphs)
-    stanza_text = stanza_list_of_sentences(stanza_sentences)
+    stanza_text, ids_list = join_all_stanza_sentences(paragraphs)
+    #print("Stanza_senteces", len(stanza_sentences))
+    #print("stanza_text", len(stanza_text))
     similarity_matrix = torch.empty(len(stanza_text), len(stanza_text))
     cos = nn.CosineSimilarity(dim=0, eps=1e-8)
     vector_dict = {}
@@ -64,6 +67,6 @@ def create_sim_matrix_word_2_vec(paragraphs):
 
             similarity_matrix[i, j] = cos(s1_v, s2_v) # calcula a similaridade do cos entre os dois vectores e adiciona a matriz
 
-    return similarity_matrix, stanza_sentences, ids_list
+    return similarity_matrix, ids_list
 
 

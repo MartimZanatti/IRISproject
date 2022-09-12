@@ -59,4 +59,5 @@ def create_paragraph_stanza(text):
     new_text = clean_text(text)
     if not nlp:
         nlp = stanza.Pipeline('pt', processors="tokenize,mwt,pos,lemma", use_gpu=True)
+
     return nlp(new_text)

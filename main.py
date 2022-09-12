@@ -1,5 +1,5 @@
 import os
-from main_functions import  process_docx_file, create_stanza_sentences
+from main_functions import  process_docx_file, create_stanza_sentences, summarization, pos_processing_paragraphs
 
 def main():
     path = '../IrisDataset/Expfinal/'
@@ -8,6 +8,10 @@ def main():
         doc = process_docx_file(path + file_name)
 
     doc = create_stanza_sentences(doc)
+
+    scores, ids_dict = summarization(doc)
+
+    pos_processing_paragraphs(doc.paragraphs,scores, ids_dict)
 
 
 

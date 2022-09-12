@@ -227,6 +227,7 @@ def correcoes_manuais(text):
         else:
             new_text += result[0] + ' ' + text_aux + ' '
 
+    return new_text
 
 def check_bad_sentences_division(text):
     if re.match(r"\s*[^a-zA-Z]+\s*$", text): #se nao contiver letras
