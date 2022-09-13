@@ -33,8 +33,8 @@ def summarization(doc):
 def pos_processing_paragraphs(paragraphs, scores, ids_dict):
 
     paragraphs_scores = create_dict_scores(scores, ids_dict)
-    get_paragraphs(paragraphs, paragraphs_scores)
+    paragraphs = get_paragraphs(paragraphs, paragraphs_scores)
 
-
+    return paragraphs
 
 

@@ -24,7 +24,7 @@ def get_paragraphs(paragraphs, paragraphs_scores):
         else:
             all_paragraphs.append([p.text])
 
-    print(all_paragraphs)
+    return all_paragraphs
 
 
 

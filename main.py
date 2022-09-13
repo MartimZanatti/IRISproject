@@ -11,7 +11,8 @@ def main():
 
     scores, ids_dict = summarization(doc)
 
-    pos_processing_paragraphs(doc.paragraphs,scores, ids_dict)
+    paragraphs = pos_processing_paragraphs(doc.paragraphs,scores, ids_dict)
+
 
 
 
