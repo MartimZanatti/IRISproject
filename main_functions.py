@@ -1,6 +1,6 @@
 from  doc_class import doc_class, create_paragraph_stanza
 from pre_processing import  find_final_data, is_title, before_italic_and_small_paragraphs
-from embeddings import create_sim_matrix_word_2_vec
+from embeddings import create_sim_matrix_word_2_vec, create_sim_matrix_bert
 from lex_rank import degree_centrality_scores
 from pos_processing import create_dict_scores, get_paragraphs
 
@@ -23,10 +23,12 @@ def create_stanza_sentences(doc):
 
 def summarization(doc):
 
-    similarity_matrix, ids_dict = create_sim_matrix_word_2_vec(doc.paragraphs)
+    #similarity_matrix, ids_dict = create_sim_matrix_word_2_vec(doc.paragraphs)
+    similarity_matrix, ids_dict = create_sim_matrix_bert(doc.paragraphs)
+    #print(similarity_matrix)
     scores = degree_centrality_scores(similarity_matrix.numpy(), threshold=None)
 
-    print(ids_dict)
+    #print(ids_dict)
     return scores, ids_dict
 
 

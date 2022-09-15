@@ -1,4 +1,4 @@
-from emb_models import load_word_2_vec
+from emb_models import load_word_2_vec, load_bert_model
 from pre_processing import check_bad_sentences_division
 import torch
 import torch.nn as nn
@@ -8,8 +8,11 @@ import gensim
 # embeddings usando word_2_vec
 
 
-model_name = "word2vec.model"
-emb_model = load_word_2_vec(model_name)
+model_name_word2vec = "word2vec.model"
+emb_model = load_word_2_vec(model_name_word2vec)
+
+model_name_bert = 'rufimelo/Legal-SBERTimbau-sts-base-ma'
+
 
 
 def join_all_stanza_sentences(paragraphs):
@@ -35,10 +38,6 @@ def get_stanza_text(sentence):
         return text
     else:
         return False
-
-
-
-
 
 def create_sim_matrix_word_2_vec(paragraphs):
     stanza_text, ids_list = join_all_stanza_sentences(paragraphs)
@@ -69,4 +68,28 @@ def create_sim_matrix_word_2_vec(paragraphs):
 
     return similarity_matrix, ids_list
 
+def create_sim_matrix_bert(paragraphs):
+    stanza_text, ids_list = join_all_stanza_sentences(paragraphs)
+    similarity_matrix = torch.empty(len(stanza_text), len(stanza_text))
+    cos = nn.CosineSimilarity(dim=0, eps=1e-8)
+    vector_dict = {}
+    model = load_bert_model(model_name_bert)
+    for i in range(len(stanza_text)):
+        for j in range(len(stanza_text)):
+            if str(i) not in vector_dict:  # se ainda não tivermos a matrix da respectiva frase
+                vec1 = model.encode(stanza_text[i])
+                vector_dict[str(i)] = vec1
+            else:
+                vec1 = vector_dict[str(i)]
+            if str(j) not in vector_dict: #igual para o v2
+                vec2 = model.encode(stanza_text[j])
+                vector_dict[str(j)] = vec2
+            else:
+                vec2 = vector_dict[str(j)]
 
+            vec1_tensor = torch.from_numpy(vec1)
+            vec2_tensor = torch.from_numpy(vec2)
+
+            similarity_matrix[i, j] = cos(vec1_tensor, vec2_tensor)  # calcula a similaridade do cos entre os dois vectores e adiciona a matriz
+
+    return similarity_matrix, ids_list
