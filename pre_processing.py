@@ -18,6 +18,8 @@ TITLES = ["relatórios", "fundamentações", "decisões", "factos", "direitos", 
           "objectos recursos", "objetos recursos", "cumpre decidir", "apreciando", "questões resolver", "inconstitucionalidades", "nulidades", "direitos fundamentais",
           "reenvios prejudicais", "incuprimentos", "prescrições", "litigâncias"]
 
+
+
 stop_words = nltk.corpus.stopwords.words('portuguese')
 spacy_model = "./model-best" #modelo para as entidades
 
@@ -75,7 +77,7 @@ def is_title(paragraphs): #funcao que verifica se um paragrafo é um titulo
 def match_foot_note(paragraphs):
     for paragraph in paragraphs:
         paragraph_text = paragraph.text.get_text()
-        if re.match("\s*\[[0-9]+\]\s*", paragraph_text): # se for uma foot note
+        if re.match("\s*\[[0-9]+\]\s*", paragraph_text) or paragraph.foot_note == True: # se for uma foot note
             return True
     return False
 
@@ -124,11 +126,14 @@ def find_final_data(paragraphs):
     id_ent = 1
     change_paragraphs = []
     count = 0
+
+    reversed_paragraphs = paragraphs.copy()
+    reversed_paragraphs.reverse()
     for i, paragraph in enumerate(reversed(paragraphs)): # percorre os paragrafos do ultimo ao primeiro
         change_paragraphs.append(paragraph)
         paragraph_text = paragraph.text.get_text()
         count += 1
-        if match_foot_note(paragraphs[i - 5:i + 1]) == False: #verifica se ha foot notes entre i - 5 e i + 1
+        if match_foot_note(reversed_paragraphs[i :i + 5]) == False: #verifica se ha foot notes entre i - 5 e i + 1
             snlp = spacy.load(spacy_model) # faz load do model spacy para as entidades
             doc = snlp(paragraph_text)
             list_ents = list(doc.ents)

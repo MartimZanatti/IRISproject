@@ -37,6 +37,7 @@ class Paragraph:
         self.id = id
         self.sumarizable = True
         self.title = False
+        self.foot_note = False
         if is_only_symbols(text):
             self.sumarizable = False
         if is_italic(text):
@@ -46,11 +47,15 @@ class Paragraph:
             self.italic = False
         if is_foot_note(text):
             self.sumarizable = False
-
+            self.foot_note = True
     def __getattribute__(self, item):
         return super(Paragraph, self).__getattribute__(item)
 
 
+def get_text_by_id(paragraphs, _id):
+    for p in paragraphs:
+        if p.id == int(_id):
+            return p.text.get_text()
 
 
 nlp = None
