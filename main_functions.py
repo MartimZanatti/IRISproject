@@ -33,8 +33,8 @@ def create_stanza_sentences(doc):
 
 def summarization(doc):
 
-    #similarity_matrix, ids_dict = create_sim_matrix_word_2_vec(doc.paragraphs)
-    similarity_matrix, ids_dict = create_sim_matrix_bert(doc.paragraphs)
+    similarity_matrix, ids_dict = create_sim_matrix_word_2_vec(doc.paragraphs)
+    #similarity_matrix, ids_dict = create_sim_matrix_bert(doc.paragraphs)
     #print(similarity_matrix)
     scores = degree_centrality_scores(similarity_matrix.numpy(), threshold=None)
 
@@ -49,7 +49,7 @@ def pos_processing_paragraphs(paragraphs, scores, ids_dict):
 
     return final_paragraphs
 
-path = '../IrisDataset/automatic_sumaries/20201202_1sec_bert/'
+path = '../IrisDataset/automatic_sumaries/20210309_1sec_word_2_vec/'
 
 
 def process_sum_to_files(paragraphs, scores, ids_dict, file_name, num_paragraphs):
@@ -65,41 +65,52 @@ def process_sum_to_files(paragraphs, scores, ids_dict, file_name, num_paragraphs
 
     documet.save(path + file_name)
 
+
+
 def rouge_main(data, real_sum_data):
-    hyp_sum_names = os.listdir(data)
-    for file_name in hyp_sum_names:
-        doc = doc_class(data + file_name)
-        doc = create_stanza_sentences(doc)
-        stanza_text= stanza_to_text(doc.paragraphs)
-        real_sum = doc_class(real_sum_data + file_name)
-        real_sum = create_stanza_sentences(real_sum)
-        stanza_text_real_sum = stanza_to_text(real_sum.paragraphs)
-        evaluator = rouge.Rouge(metrics=['rouge-n', 'rouge-l', "rouge-w"], max_n=4, limit_length=False,
-                           length_limit=100,
-                           length_limit_type='words',
-                           alpha=0.5, # Default F1_score
-                           weight_factor=1.2,
-                                stemming=False)
-        #print(stanza_text)
-        #print(stanza_text_real_sum)
-        scores = evaluator.get_scores(stanza_text, stanza_text_real_sum)
-        #print(scores)
+    for i,path in enumerate(data):
+        sec_name = path.split('_')
+        dir_name = path.split('/')[-2]
+        if "word_2_vec" not in path:
+            sum_data = real_sum_data + sec_name[-3].split('/')[-1] + "_" + sec_name[-2] + "/"
+        files = os.listdir(path)
+        for file_name in files:
+            if "txt" not in file_name:
+                print("onde vai buscar os ficheiros", path + file_name)
+                doc = doc_class(path + file_name)
+                doc = create_stanza_sentences(doc)
+                stanza_text = stanza_to_text(doc.paragraphs)
+                print("vai buscar os sum reais", sum_data + file_name)
+                real_sum = doc_class(sum_data + file_name)
+                real_sum = create_stanza_sentences(real_sum)
+                stanza_text_real_sum = stanza_to_text(real_sum.paragraphs)
+                evaluator = rouge.Rouge(metrics=['rouge-n', 'rouge-l', "rouge-w"], max_n=4, limit_length=False,
+                               length_limit=100,
+                               length_limit_type='words',
+                               alpha=0.5, # Default F1_score
+                               weight_factor=1.2,
+                                    stemming=False)
+                #print(stanza_text)
+                #print(stanza_text_real_sum)
+                scores = evaluator.get_scores(stanza_text, stanza_text_real_sum)
+                #print(scores)
 
-        path_rouge = '../IrisDataset/rouge_scores/20201117_1sec_bert3/'
+                path_rouge = '../IrisDataset/rouge_scores/' + dir_name + '/'
 
-        file = open(path_rouge + file_name[0:-6] + ".txt", "w", encoding="UTF-8" )
-        for metric, results in sorted(scores.items(), key=lambda x: x[0]):
-            file.write(metric + "\n")
-            file.write("f: ")
-            file.write(str(results["f"]))
-            file.write("\n")
-            file.write("p: ")
-            file.write(str(results["p"]))
-            file.write("\n")
-            file.write("r: ")
-            file.write(str(results["r"]))
-            file.write("\n")
-
+                print("onde escreve os ficheiros", path_rouge + file_name[0:-6])
+                file = open(path_rouge + file_name[0:-6] + ".txt", "w", encoding="UTF-8" )
+                for metric, results in sorted(scores.items(), key=lambda x: x[0]):
+                    file.write(metric + "\n")
+                    file.write("f: ")
+                    file.write(str(results["f"]))
+                    file.write("\n")
+                    file.write("p: ")
+                    file.write(str(results["p"]))
+                    file.write("\n")
+                    file.write("r: ")
+                    file.write(str(results["r"]))
+                    file.write("\n")
+                file.close()
 
 
 
@@ -201,6 +212,7 @@ def box_plot_main(paths):
                 rouge_w_r[str(i)] = [float(lines[23][3:])]
             else:
                 rouge_w_r[str(i)].append(float(lines[23][3:]))
+
 
     fig = plt.figure(figsize=(10, 7))
     ax = fig.add_axes([0.15, 0.1, 0.7, 0.8])

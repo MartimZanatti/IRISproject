@@ -11,7 +11,7 @@ import gensim
 model_name_word2vec = "word2vec.model"
 emb_model = load_word_2_vec(model_name_word2vec)
 
-model_name_bert = 'rufimelo/Legal-SBERTimbau-sts-base-ma'
+model_name_bert = 'rufimelo/Legal-SBERTimbau-sts-large-v2'
 
 
 
