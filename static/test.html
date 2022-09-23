@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sumarizador</title>
+    <style>
+        @import url('https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css');
+        @import url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css');
+
+        body {
+            display: grid;
+            grid-template:
+                "controls controls" min-content
+                "content extract"
+                / 1fr 99fr;
+            width: 100%;
+            height: 100vh;
+            background-color: #252525;
+            margin: 0;
+            padding: 0;
+        }
+
+        body>div {
+            margin: 5px;
+            background-color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <div style="grid-area: controls; margin: 5px;">
+        <input class="form-control form-control-sm" id="file" type="file" name="file" hidden>
+        <div class="progress" id="progress-parent" hidden>
+            <div class="progress-bar progress-bar-striped progress-bar-animated" id="progress-bar"></div>
+        </div>
+        <div class="p-2">
+            <span class="fw-bold" id="title"></span>
+            <u class="cursor-pointer fw-bold" id="fake-input">Inserir documento aqui</u> |
+            <u class="cursor-pointer fw-bold p-1 m-1" id="toogle" onclick="tooglePars()" hidden></u><u class="cursor-pointer fw-bold p-1 m-1" onclick="showTop(5)">5</u>
+            <u class="cursor-pointer fw-bold p-1 m-1" onclick="showTop(10)">10</u>
+            <u class="cursor-pointer fw-bold p-1 m-1" onclick="showTop(15)">15</u>
+            <u class="cursor-pointer fw-bold p-1 m-1" onclick="showTop(20)">20</u>
+        </div>
+    </div>
+    <div style="grid-area: content; overflow: auto; resize: horizontal; width: 50vw; scroll-behavior: smooth;">
+        <div>
+            <div id="out">
+                <p data-par="1">O documento será mostrado aqui</p>
+            </div>
+        </div>
+    </div>
+    <div style="grid-area: extract; overflow: auto;">
+        <div>
+            <div id="sentences">
+                <p data-par="1">As frases extraidas serão mostradas aqui</p>
+            </div>
+        </div>
+    </div>
+    <style>
+        .show-tops-5 p.tops5:before,
+        .show-tops-10 p.tops5:before,
+        .show-tops-15 p.tops5:before,
+        .show-tops-20 p.tops5:before {
+            background: #e6c300 !important;
+        }
+
+        .show-tops-10 p.tops10:before,
+        .show-tops-15 p.tops10:before,
+        .show-tops-20 p.tops10:before {
+            background: #ffdd1a !important;
+        }
+
+        .show-tops-15 p.tops15:before,
+        .show-tops-20 p.tops15:before {
+            background: #ffe866 !important;
+        }
+
+        .show-tops-20 p.tops20:before {
+            background: #fff7cc !important;
+        }
+
+        .cursor-pointer {
+            cursor: pointer;
+        }
+
+        #sentences .no-text {
+            display: none;
+        }
+
+        p[data-par]:before {
+            content: attr(data-par);
+            text-align: center;
+            font: 12px monospace;
+            margin: 0px 0px 0px 4px;
+            display: inline-block;
+        }
+
+        p[data-par].no-text:before {
+            font-size: 8px;
+            line-height: 8px;
+        }
+
+        p[data-par].no-text {
+            line-height: 0px;
+        }
+    </style>
+    <script>// Setup post events
+        addEventListener("load", function () {
+            document.getElementById("file").addEventListener("change", function (e) {
+                postFile(e.target.files[0]);
+            });
+            document.body.addEventListener("dragover", function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+            document.body.addEventListener("drop", function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                document.getElementById("file").files = e.dataTransfer.files;
+                document.getElementById("file").dispatchEvent(new Event("change"));
+            });
+            document.getElementById("fake-input").addEventListener("click", function (e) {
+                document.getElementById("file").click();
+            });
+        });
+
+
+        let processingPost = false;
+        function postFile(file) {
+            if (processingPost) return;
+            processingPost = true;
+            let progressParent = document.getElementById("progress-parent");
+            let progressBar = document.getElementById("progress-bar");
+            progressParent.removeAttribute("hidden");
+            progressBar.style.width = "10%";
+
+            let title = document.getElementById("title");
+            title.innerText = file.name;
+            let fk = document.getElementById("fake-input");
+            if (fk) {
+                fk.remove();
+            }
+            document.getElementById("toogle").removeAttribute("hidden");
+
+            let formData = new FormData();
+            formData.append("file", file);
+            fetch("https://pe.inesc-id.pt/sumarizador/", {
+                method: "POST",
+                body: formData
+            }).then(response => {
+                progressBar.style.width = "50%";
+                return response.json()
+            }).then(json => {
+                progressBar.style.width = "75%";
+                showResponse(json);
+            }).finally(() => {
+                processingPost = false;
+                progressParent.setAttribute("hidden", "");
+            });
+        }
+
+        function flatChildren(parent) {
+            if (parent.innerText.split("\n").length > 1) {
+                return Array.from(parent.children).flatMap(o => flatChildren(o));
+            }
+            else {
+                return parent;
+            }
+        }
+
+        function addSentence(parReference) {
+            let parentSentences = document.getElementById("sentences");
+            let reference = document.createElement("div");
+            reference.innerHTML = `
+            <a href="#${parReference.id}"><i class="bi bi-arrow-up-left-circle"></i></a>
+            <a href="#" onclick="copyToClipboard('${parReference.id}', this)" style="transition: 0.25s"><i class="bi bi-clipboard"></i></a>
+            <p>${parReference.innerHTML}</p>
+            `
+            reference.className = parReference.className;
+            parentSentences.appendChild(reference);
+        }
+
+        function copyToClipboard(id, elem) {
+            let text = document.getElementById(id);
+            navigator.clipboard.writeText(text.innerText);
+            elem.style.color = "lightgreen";
+            setTimeout(() => {
+                elem.style.color = "";
+            }, 1500);
+        }
+
+        function displayTopSentences(N) {
+            document.getElementById("out").className = "show-tops-" + N;
+            return (div) => {
+                div.classList.add("no-text");
+                if (N >= 5 && div.classList.contains("tops5")) {
+                    div.classList.remove("no-text");
+                }
+                else if (N >= 10 && div.classList.contains("tops10")) {
+                    div.classList.remove("no-text");
+                }
+                else if (N >= 15 && div.classList.contains("tops15")) {
+                    div.classList.remove("no-text");
+                }
+                else if (N >= 20 && div.classList.contains("tops20")) {
+                    div.classList.remove("no-text");
+                }
+            }
+        }
+        let currentTop = 0;
+        function showTop(N) {
+            let parentSentences = document.getElementById("sentences");
+            let divs = Array.from(parentSentences.querySelectorAll("div"));
+            currentTop = N;
+            divs.forEach(displayTopSentences(currentTop));
+            tooglePars();
+            tooglePars();
+        }
+
+        let hidden = true;
+        function tooglePars() {
+            if (hidden) {
+                document.querySelectorAll("#out .no-text").forEach(tr => {
+                    tr.classList.remove("no-text");
+                });
+                document.getElementById("toogle").innerText = "Esconder parágrafos";
+                hidden = false;
+            }
+            else {
+                document.querySelectorAll("#out > [data-par]").forEach(displayTopSentences(currentTop));
+                document.getElementById("toogle").innerText = "Mostrar parágrafos";
+                hidden = true;
+            }
+        }
+
+        function showResponse(json) {
+            let parentOut = document.getElementById("out");
+            parentOut.innerHTML = "";
+            let parentSentences = document.getElementById("sentences");
+            parentSentences.innerHTML = "";
+
+            let parI = 1;
+            let liveArray = parentOut.getElementsByTagName('p');
+            let maxScore = 0;
+            let scores = json.map(o => o.score).filter(o => o !== null).sort((a,b) => b - a);
+            let top5 = scores.length >= 5 ? scores[4] : scores.at(-1);
+            let top10 = scores.length >= 10 ? scores[9] : scores.at(-1);
+            let top15 = scores.length >= 15 ? scores[14] : scores.at(-1);
+            let top20 = scores.length >= 20 ? scores[19] : scores.at(-1);
+            for (let entry of json) {
+                parentOut.insertAdjacentHTML('beforeend', entry.text)
+                for(let i=0; i < liveArray.length; i++){
+                    let p = liveArray[i];
+                    if( p.dataset.par === undefined ){
+                        p.dataset.par = parI;
+                        p.id = `par-${parI}`;
+                        p.dataset.score = entry.score;
+                        if( entry.score >= top5 ){
+                            p.className = "tops5"
+                        }
+                        else if( entry.score >= top10 ){
+                            p.className = "tops10"
+                        }
+                        else if( entry.score >= top15 ){
+                            p.className = "tops15"
+                        }
+                        else if( entry.score >= top20 ){
+                            p.className = "tops20"
+                        }
+                        else{
+                            p.className = "others"
+                        }
+                        if( p.className != "others" ){
+                            addSentence(p)
+                        }
+                        parI++;
+                    }
+                }
+            }
+            
+            showTop(5);
+            if (hidden) {
+                tooglePars();
+            }
+        }
+
+        function makeParForMultiple(i, parent, elementPadding) {
+            let start = 1;
+            while (parent.children.length > 0) {
+                let child = parent.children[0];
+                let padding = parent.cloneNode(false);
+                padding.setAttribute("start", start);
+                padding.appendChild(child);
+                makePar(i++, padding);
+                start++;
+            }
+            return i;
+        }
+
+        function makePar(i, {text, score}) {
+            let outTable = document.getElementById("out");
+            let parRow = outTable.insertRow();
+            let textCell = parRow.insertCell();
+            let clone = par.cloneNode(true);
+            textCell.appendChild(clone);
+            parRow.id = "par-" + (i);
+            parRow.dataset.par = i;
+            if (clone.querySelectorAll) { // If it is a text node it will not have querySelectorAll
+                let scores = [score];
+                if (scores.length > 0) {
+                    let best = scores.reduce((best, score) => {
+                        if (parseFloat(score.dataset.score) > parseFloat(best.dataset.score)) {
+                            best = score;
+                        }
+                        return best;
+                    });
+                    parRow.className = best.className;
+                    addSentence(parRow);
+                }
+                else {
+                    parRow.className = "others";
+                }
+            }
+            else {
+                console.error("TextNode found on root.")
+            }
+        }</script>
+</body>
+
+</html>
