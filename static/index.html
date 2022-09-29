@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sumarizador</title>
+    <link rel="stylesheet" href="style.css">
+    <script defer src="app.js"></script>
+</head>
+<body class="d-flex flex-column vh-100">
+    <header class="mb-1 py-2 align-items-center d-flex flex-wrap">
+        <a class="align-items-center d-flex flex-wrap text-decoration-none nav-link" href="./">
+            <img src="./PT-logoLogo-STJ.png" style="max-height: 70px;">
+            <div class="ps-2 d-flex flex-column align-items-center">
+                <h5 class="m-0 fancy-font">Sumarizador</h5>
+            </div>
+        </a>
+        <div>
+            <input class="form-control form-control-sm" id="file" type="file" name="file" hidden>
+            <div class="progress" id="progress-parent" hidden>
+                <div class="progress-bar progress-bar-striped progress-bar-animated" id="progress-bar"></div>
+            </div>
+            <div class="p-2">
+                <span class="fw-bold" id="title"></span>
+                <u role="button" class="fw-bold" id="fake-input">Inserir documento aqui</u> |
+                Mostrar: 
+                <u role="button" class="fw-bold p-1 m-1" onclick="showTop(0)">Todos</u>
+                <u role="button" class="fw-bold p-1 m-1" onclick="showTop(4)">Top 5</u>
+                <u role="button" class="fw-bold p-1 m-1" onclick="showTop(3)">Top 10</u>
+                <u role="button" class="fw-bold p-1 m-1" onclick="showTop(2)">Top 15</u>
+                <u role="button" class="fw-bold p-1 m-1" onclick="showTop(1)">Top 20</u>
+            </div>
+        </div>
+    </header>
+    <main class="flex-grow-1 p-2 overflow-auto">
+        <div style="grid-area: content; overflow: auto; resize: horizontal; width: 50vw; scroll-behavior: smooth;">
+            <template id="par-row-template">
+                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap-grid.min.css">
+                <div class="row m-auto">
+                    <div class="col-1"><slot name="number"></slot></div>
+                    <div class="col-10"><slot name="content"></slot></div>
+                    <div class="col-1"><slot name="controls"></slot></div>
+                </div>
+            </template>
+            <template id="controls-template">
+                <div class="d-flex flex-column" slot="controls">
+                    <i class="bi bi-bookmark-toggle" role="button" onclick="toggleParagraph(this)"></i>
+                    <i class="bi bi-clipboard" role="button" onclick="copyToClipboard(this)" style="transition: 1.25s;"></i>
+                    <i class="bi bi-reception-x" title="Relevância"></i>
+                </div>
+            </template>
+            <div id="out">O documento aparecerá completo aqui.</div>
+        </div>
+        <div style="grid-area: extract; overflow: auto;">
+            <template id="par-row-extracted-template">
+                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap-grid.min.css">
+                <div class="row m-auto">
+                    <div class="col-1"><slot name="controls"></slot></div>
+                    <div class="col-1"><slot name="number"></slot></div>
+                    <div class="col-10"><slot name="content"></slot></div>
+                </div>
+            </template>
+            <template id="extracted-controls-template">
+                <div class="d-flex flex-column" slot="controls">
+                    <i class="bi bi-bookmark-fill" role="button" onclick="toggleExctractedParagraph(this)"></i>
+                    <a id="link-par" style="color: var(--primary-gold);"><i class="bi bi-arrow-up-left-circle"></i></a>
+                    <i class="bi bi-clipboard" role="button" onclick="copyToClipboard(this)" style="transition: 1.25s;"></i>
+                    <i class="bi bi-reception-x" title="Relevância"></i>
+                </div>
+            </template>
+            <div id="sentences">Os parágrafos guardados aparecerão aqui por ordem.</div>
+        </div>
+    </main>
+</body>
+</html>
