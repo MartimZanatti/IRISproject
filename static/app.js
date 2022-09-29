@@ -231,6 +231,24 @@ function copyToClipboard(controlElem) {
     }, 1500);
 }
 
+function exportDocx(){
+    let pars = [];
+    for( let par of document.querySelectorAll('par-row-extracted') ){
+        if( par.dataset.saved === 'true' ){
+            pars.push(new docx.Paragraph(par.querySelector("[slot=content]").textContent))
+        }
+    }
+    const doc = new docx.Document({
+        sections: [{
+            children: pars
+        }]
+    });
+    docx.Packer.toBlob(doc).then((blob) => {
+        saveAs(blob, "sumario.docx")
+    })
+
+}
+
 let r = [
     {
         "score": null,

@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sumarizador</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.8/FileSaver.js"></script>
+    <script src="https://unpkg.com/docx@7.1.0/build/index.js"></script>
     <script defer src="app.js"></script>
 </head>
 <body class="d-flex flex-column vh-100">
@@ -30,6 +32,7 @@
                 <u role="button" class="fw-bold p-1 m-1" onclick="showTop(3)">Top 10</u>
                 <u role="button" class="fw-bold p-1 m-1" onclick="showTop(2)">Top 15</u>
                 <u role="button" class="fw-bold p-1 m-1" onclick="showTop(1)">Top 20</u>
+                <i role="button" class="fw-bold p-1 m-1 bi bi-filetype-docx" onclick="exportDocx()"></i>
             </div>
         </div>
     </header>
