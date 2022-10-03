@@ -32,8 +32,6 @@ class ParRow extends HTMLElement{
         else{
             this._parExtracted.dataset.saved = false;
         }
-
-        console.log(arguments)
     }
 }
 
@@ -48,11 +46,16 @@ function showResponse(arrayOfParagraphs){
 
     let sortedScores = arrayOfParagraphs.filter(o => o.score !== null).sort((a,b) => b.score - a.score);
     let top5minScore = sortedScores.length >= 5 ? sortedScores[4].score : sortedScores.slice(-1)[0].score;
+    let top7minScore = sortedScores.length >= 7 ? sortedScores[6].score : sortedScores.slice(-1)[0].score;
     let top10minScore = sortedScores.length >= 10 ? sortedScores[9].score : sortedScores.slice(-1)[0].score;
     let top15minScore = sortedScores.length >= 15 ? sortedScores[14].score : sortedScores.slice(-1)[0].score;
     let top20minScore = sortedScores.length >= 20 ? sortedScores[19].score : sortedScores.slice(-1)[0].score;
+    let preSelectPars = [];
     arrayOfParagraphs.forEach((par, index) => {
-        createDocumentParagraph(par.text, index+1, par.score >= top5minScore ? 4 : par.score >= top10minScore ? 3 : par.score >= top15minScore ? 2 : par.score >= par.score >= top20minScore ?  1 : 0)
+        let parRow = createDocumentParagraph(par.text, index+1, par.score >= top5minScore ? 4 : par.score >= top10minScore ? 3 : par.score >= top15minScore ? 2 : par.score >= par.score >= top20minScore ?  1 : 0)
+        if( par.score >= top7minScore ){
+            parRow.dataset.saved = true;
+        }
     });
 }
 
@@ -146,6 +149,7 @@ function createDocumentParagraph(htmlContent,parNumber, bin){
 
 
     parent.appendChild(par);
+    return par;
 }
 
 function createDocumentParagraphExtracted(parRow){
@@ -1075,4 +1079,4 @@ let r = [
         "text": "<p><em>Vide</em> <span class=\"smallcaps\">António Santos Abrantes Geraldes/Paulo Pimenta/Luís Filipes Pires de Sousa</span>, <em>Código de Processo Civil Anotado</em>, Vol. I, Coimbra, Almedina, 2018, p.238.<a class=\"footnote-back\" href=\"#fnref4\" role=\"doc-backlink\">↩︎</a></p>"
     }
 ]
-showResponse(r);
+//showResponse(r);
