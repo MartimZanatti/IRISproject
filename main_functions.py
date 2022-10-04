@@ -5,7 +5,6 @@ from pre_processing import  find_final_data, is_title, before_italic_and_small_p
 from embeddings import create_sim_matrix_word_2_vec, create_sim_matrix_bert, join_all_stanza_sentences
 from lex_rank import degree_centrality_scores
 from pos_processing import create_dict_scores, get_paragraphs, get_n_best_paragraphs
-from docx import *
 from rouge_evaluator import stanza_to_text
 import numpy as np
 import matplotlib.pyplot as plt

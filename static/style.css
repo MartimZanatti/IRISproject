@@ -1,0 +1,89 @@
+@import url('https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css');
+@import url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap');
+
+:root{
+    --primary-red: #BA1514;
+    --primary-gold: #C2A340;
+    --secondary-gold: #F4ECCE;
+}
+
+.fancy-font {
+    font-family: 'Cinzel', serif;
+    color: var(--primary-red);
+}
+
+[role=button] {
+    cursor: pointer;
+}
+
+main{
+    display: grid;
+    grid-template:
+        "content extract" / 1fr 99fr;
+    gap: 2em;
+}
+
+[slot=content] {
+    font-family: Times New Roman;
+    font-size: 14px;
+}
+
+par-row[data-visible="false"]{
+    display: none;
+}
+
+par-row[data-visible="true"]{
+    display: block;
+}
+
+[slot=controls]{
+    color: var(--primary-gold);
+}
+
+[data-bin="0"] .bi-reception-x:before{
+    content: "\F510";
+    opacity: 0.2;
+}
+[data-bin="1"] .bi-reception-x:before{
+    content: "\F511";
+    opacity: 0.4;
+}
+[data-bin="2"] .bi-reception-x:before{
+    content: "\F512";
+    opacity: 0.6;
+}
+[data-bin="3"] .bi-reception-x:before{
+    content: "\F513";
+    opacity: 0.8;
+}
+[data-bin="4"] .bi-reception-x:before{
+    content: "\F514";
+    opacity: 1;
+}
+
+[data-saved="false"] .bi-bookmark-toggle:before{
+    content: "\F1A2";
+}
+
+[data-saved="true"] .bi-bookmark-toggle:before{
+    content: "\F199";
+}
+
+[data-saved="true"] .bi-bookmark-toggle:hover:before, [data-saved="true"] .bi-bookmark-fill:hover:before{
+    color: var(--primary-red)
+}
+
+par-row-extracted[data-saved="false"]{
+    display: none;
+}
+
+par-row:target{
+    animation: highlight-target 2.5s linear;
+}
+
+@keyframes highlight-target {
+    from {background-color: initial;}
+    10% {background-color: var(--secondary-gold);}
+    to {background-color: initial;}
+  }

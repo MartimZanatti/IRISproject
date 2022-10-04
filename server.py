@@ -1,21 +1,21 @@
-from flask import Flask, request, send_file, jsonify
+from flask import Flask, request, send_file, jsonify, send_from_directory
 from flask_cors import CORS
 import os
 import tempfile
 from main_functions import process_docx_file, create_stanza_sentences, summarization, pos_processing_paragraphs
 
-
 app = Flask(__name__)
 CORS(app)
 app.config['JSON_AS_ASCII']=False
 
-@app.route("/", methods=["GET"])
-def get_post():
-    return send_file("test.html")
-
+@app.route('/', methods=["GET"])
+@app.route('/<path:path>', methods=["GET"])
+def send_report(path=None):
+    if path is None:
+        path = "index.html"
+    return send_from_directory('static', path)
 
 @app.route("/", methods=["POST"])
-
 def handle_post():
     _, file_extension = os.path.splitext(request.files["file"].filename)
     uploaded_file = tempfile.NamedTemporaryFile(suffix=file_extension, delete=False)
