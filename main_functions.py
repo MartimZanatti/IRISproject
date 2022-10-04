@@ -14,13 +14,14 @@ import matplotlib.pyplot as plt
 import nltk
 #nltk.download('punkt')
 
-def process_docx_file(file_name):
+def process_docx_file(file_name, preprocessing= True):
 
-    d = doc_class(file_name)
+    d = doc_class(file_name, preprocessing)
     # pre-processamento para limitar as frases sumarizaveis
-    find_final_data(d.paragraphs)
-    is_title(d.paragraphs)
-    before_italic_and_small_paragraphs(d.paragraphs)
+    if preprocessing:
+        find_final_data(d.paragraphs)
+        is_title(d.paragraphs)
+        before_italic_and_small_paragraphs(d.paragraphs)
 
     return d
 
@@ -33,9 +34,9 @@ def create_stanza_sentences(doc):
 
 def summarization(doc):
 
-    similarity_matrix, ids_dict = create_sim_matrix_word_2_vec(doc.paragraphs)
+    similarity_matrix, ids_dict = create_sim_matrix_word_2_vec(doc.paragraphs, bert=False)
     #similarity_matrix, ids_dict = create_sim_matrix_bert(doc.paragraphs)
-    #print(similarity_matrix)
+
     scores = degree_centrality_scores(similarity_matrix.numpy(), threshold=None)
 
     #print(ids_dict)
@@ -49,7 +50,7 @@ def pos_processing_paragraphs(paragraphs, scores, ids_dict):
 
     return final_paragraphs
 
-path = '../IrisDataset/automatic_sumaries/20210309_1sec_word_2_vec/'
+path = '../IrisDataset/automatic_sumaries/20210309_1sec_word_2_vec_no_pre_processing/'
 
 
 def process_sum_to_files(paragraphs, scores, ids_dict, file_name, num_paragraphs):
@@ -67,51 +68,37 @@ def process_sum_to_files(paragraphs, scores, ids_dict, file_name, num_paragraphs
 
 
 
-def rouge_main(data, real_sum_data):
-    for i,path in enumerate(data):
-        sec_name = path.split('_')
-        dir_name = path.split('/')[-2]
-        if "word_2_vec" not in path:
-            sum_data = real_sum_data + sec_name[-3].split('/')[-1] + "_" + sec_name[-2] + "/"
-        files = os.listdir(path)
-        for file_name in files:
-            if "txt" not in file_name:
-                print("onde vai buscar os ficheiros", path + file_name)
-                doc = doc_class(path + file_name)
-                doc = create_stanza_sentences(doc)
-                stanza_text = stanza_to_text(doc.paragraphs)
-                print("vai buscar os sum reais", sum_data + file_name)
-                real_sum = doc_class(sum_data + file_name)
-                real_sum = create_stanza_sentences(real_sum)
-                stanza_text_real_sum = stanza_to_text(real_sum.paragraphs)
-                evaluator = rouge.Rouge(metrics=['rouge-n', 'rouge-l', "rouge-w"], max_n=4, limit_length=False,
-                               length_limit=100,
-                               length_limit_type='words',
-                               alpha=0.5, # Default F1_score
-                               weight_factor=1.2,
+def rouge_main(data, real_sum_data, rouge_path):
+    files = os.listdir(data)
+    for file_name in files:
+        if "txt" not in file_name:
+            print(file_name)
+            doc = doc_class(data + file_name, True)
+            doc = create_stanza_sentences(doc)
+            stanza_text = stanza_to_text(doc.paragraphs)
+            real_sum = doc_class(real_sum_data + file_name, True)
+            real_sum = create_stanza_sentences(real_sum)
+            stanza_text_real_sum = stanza_to_text(real_sum.paragraphs)
+            evaluator = rouge.Rouge(metrics=['rouge-n', 'rouge-l', "rouge-w"], max_n=4, limit_length=False,
+                                    length_limit=100,
+                                    length_limit_type='words',
+                                    alpha=0.5,  # Default F1_score
+                                    weight_factor=1.2,
                                     stemming=False)
-                #print(stanza_text)
-                #print(stanza_text_real_sum)
-                scores = evaluator.get_scores(stanza_text, stanza_text_real_sum)
-                #print(scores)
-
-                path_rouge = '../IrisDataset/rouge_scores/' + dir_name + '/'
-
-                print("onde escreve os ficheiros", path_rouge + file_name[0:-6])
-                file = open(path_rouge + file_name[0:-6] + ".txt", "w", encoding="UTF-8" )
-                for metric, results in sorted(scores.items(), key=lambda x: x[0]):
-                    file.write(metric + "\n")
-                    file.write("f: ")
-                    file.write(str(results["f"]))
-                    file.write("\n")
-                    file.write("p: ")
-                    file.write(str(results["p"]))
-                    file.write("\n")
-                    file.write("r: ")
-                    file.write(str(results["r"]))
-                    file.write("\n")
-                file.close()
-
+            scores = evaluator.get_scores(stanza_text, stanza_text_real_sum)
+            file = open(rouge_path + file_name[0:-6] + ".txt", "w", encoding="UTF-8")
+            for metric, results in sorted(scores.items(), key=lambda x: x[0]):
+                file.write(metric + "\n")
+                file.write("f: ")
+                file.write(str(results["f"]))
+                file.write("\n")
+                file.write("p: ")
+                file.write(str(results["p"]))
+                file.write("\n")
+                file.write("r: ")
+                file.write(str(results["r"]))
+                file.write("\n")
+            file.close()
 
 
 def box_plot_main(paths):
@@ -216,151 +203,165 @@ def box_plot_main(paths):
 
     fig = plt.figure(figsize=(10, 7))
     ax = fig.add_axes([0.15, 0.1, 0.7, 0.8])
-    ax.set_xticklabels(["bert", "bert2", "bert3", "word2vec"])
-    all_f_rouge_1 = [np.array(rouge_1_f["0"]), np.array(rouge_1_f["1"]),np.array(rouge_1_f["2"]), np.array(rouge_1_f["3"])]
+    ax.set_ylim([0, 1])
+    ax.set_xticklabels(["bert", "bert2", "bert3", "bert4", "word2vec"])
+    all_f_rouge_1 = [np.array(rouge_1_f["0"]), np.array(rouge_1_f["1"]), np.array(rouge_1_f["2"]), np.array(rouge_1_f["3"]), np.array(rouge_1_f["4"])]
     bp_p = ax.boxplot(all_f_rouge_1, sym='')
+    ax.set_title("f1 score 1_gram.")
     plt.savefig("f_rouge_1.png")
 
     fig = plt.figure(figsize=(10, 7))
     ax = fig.add_axes([0.15, 0.1, 0.7, 0.8])
-    ax.set_xticklabels(["bert", "bert2", "bert3", "word2vec"])
-    all_p_rouge_1 = [np.array(rouge_1_p["0"]), np.array(rouge_1_p["1"]), np.array(rouge_1_p["2"]),
-                     np.array(rouge_1_p["3"])]
+    ax.set_ylim([0, 1])
+    ax.set_xticklabels(["bert", "bert2", "bert3", "bert4", "word2vec"])
+    all_p_rouge_1 = [np.array(rouge_1_p["0"]), np.array(rouge_1_p["1"]), np.array(rouge_1_p["2"]), np.array(rouge_1_p["3"]), np.array(rouge_1_p["4"])]
     bp_p = ax.boxplot(all_p_rouge_1, sym='')
+    ax.set_title("precision 1_gram.")
     plt.savefig("p_rouge_1.png")
 
     fig = plt.figure(figsize=(10, 7))
     ax = fig.add_axes([0.15, 0.1, 0.7, 0.8])
-    ax.set_xticklabels(["bert", "bert2", "bert3", "word2vec"])
-    all_r_rouge_1 = [np.array(rouge_1_r["0"]), np.array(rouge_1_r["1"]), np.array(rouge_1_r["2"]),
-                     np.array(rouge_1_r["3"])]
+    ax.set_ylim([0, 1])
+    ax.set_xticklabels(["bert", "bert2", "bert3", "bert4", "word2vec"])
+    all_r_rouge_1 = [np.array(rouge_1_r["0"]), np.array(rouge_1_r["1"]), np.array(rouge_1_r["2"]), np.array(rouge_1_r["3"]), np.array(rouge_1_r["4"])]
     bp_p = ax.boxplot(all_r_rouge_1, sym='')
+    ax.set_title("recall 1_gram.")
     plt.savefig("r_rouge_1.png")
 
     fig = plt.figure(figsize=(10, 7))
     ax = fig.add_axes([0.15, 0.1, 0.7, 0.8])
-    ax.set_xticklabels(["bert", "bert2", "bert3", "word2vec"])
-    all_f_rouge_2 = [np.array(rouge_2_f["0"]), np.array(rouge_2_f["1"]), np.array(rouge_2_f["2"]),
-                     np.array(rouge_2_f["3"])]
+    ax.set_ylim([0, 1])
+    ax.set_xticklabels(["bert", "bert2", "bert3", "bert4", "word2vec"])
+    all_f_rouge_2 = [np.array(rouge_2_f["0"]), np.array(rouge_2_f["1"]), np.array(rouge_2_f["2"]), np.array(rouge_2_f["3"]), np.array(rouge_2_f["4"])]
     bp_p = ax.boxplot(all_f_rouge_2, sym='')
+    ax.set_title("f1 score 2_gram.")
     plt.savefig("f_rouge_2.png")
 
     fig = plt.figure(figsize=(10, 7))
     ax = fig.add_axes([0.15, 0.1, 0.7, 0.8])
-    ax.set_xticklabels(["bert", "bert2", "bert3", "word2vec"])
-    all_p_rouge_2 = [np.array(rouge_2_p["0"]), np.array(rouge_2_p["1"]), np.array(rouge_2_p["2"]),
-                     np.array(rouge_2_p["3"])]
+    ax.set_ylim([0, 1])
+    ax.set_xticklabels(["bert", "bert2", "bert3", "bert4", "word2vec"])
+    all_p_rouge_2 = [np.array(rouge_2_p["0"]), np.array(rouge_2_p["1"]), np.array(rouge_2_p["2"]), np.array(rouge_2_p["3"]), np.array(rouge_2_p["4"])]
     bp_p = ax.boxplot(all_p_rouge_2, sym='')
+    ax.set_title("precision 2_gram.")
     plt.savefig("p_rouge_2.png")
 
     fig = plt.figure(figsize=(10, 7))
     ax = fig.add_axes([0.15, 0.1, 0.7, 0.8])
-    ax.set_xticklabels(["bert", "bert2", "bert3", "word2vec"])
-    all_r_rouge_2 = [np.array(rouge_2_r["0"]), np.array(rouge_2_r["1"]), np.array(rouge_2_r["2"]),
-                     np.array(rouge_2_r["3"])]
+    ax.set_ylim([0, 1])
+    ax.set_xticklabels(["bert", "bert2", "bert3", "bert4", "word2vec"])
+    all_r_rouge_2 = [np.array(rouge_2_r["0"]), np.array(rouge_2_r["1"]), np.array(rouge_2_r["2"]), np.array(rouge_2_r["3"]), np.array(rouge_2_r["4"])]
     bp_p = ax.boxplot(all_r_rouge_2, sym='')
+    ax.set_title("recall 2_gram. ")
     plt.savefig("r_rouge_2.png")
 
     fig = plt.figure(figsize=(10, 7))
     ax = fig.add_axes([0.15, 0.1, 0.7, 0.8])
-    ax.set_xticklabels(["bert", "bert2", "bert3", "word2vec"])
-    all_f_rouge_3 = [np.array(rouge_3_f["0"]), np.array(rouge_3_f["1"]), np.array(rouge_3_f["2"]),
-                     np.array(rouge_3_f["3"])]
+    ax.set_ylim([0, 1])
+    ax.set_xticklabels(["bert", "bert2", "bert3", "bert4", "word2vec"])
+    all_f_rouge_3 = [np.array(rouge_3_f["0"]), np.array(rouge_3_f["1"]), np.array(rouge_3_f["2"]), np.array(rouge_3_f["3"]), np.array(rouge_3_f["4"])]
     bp_p = ax.boxplot(all_f_rouge_3, sym='')
+    ax.set_title("f1 score 3_gram.")
     plt.savefig("f_rouge_3.png")
 
     fig = plt.figure(figsize=(10, 7))
     ax = fig.add_axes([0.15, 0.1, 0.7, 0.8])
-    ax.set_xticklabels(["bert", "bert2", "bert3", "word2vec"])
-    all_p_rouge_3 = [np.array(rouge_3_p["0"]), np.array(rouge_3_p["1"]), np.array(rouge_3_p["2"]),
-                     np.array(rouge_3_p["3"])]
+    ax.set_ylim([0, 1])
+    ax.set_xticklabels(["bert", "bert2", "bert3", "bert4", "word2vec"])
+    all_p_rouge_3 = [np.array(rouge_3_p["0"]), np.array(rouge_3_p["1"]), np.array(rouge_3_p["2"]), np.array(rouge_3_p["3"]), np.array(rouge_3_p["4"])]
     bp_p = ax.boxplot(all_p_rouge_3, sym='')
+    ax.set_title("precision 3_gram.")
     plt.savefig("p_rouge_3.png")
 
     fig = plt.figure(figsize=(10, 7))
     ax = fig.add_axes([0.15, 0.1, 0.7, 0.8])
-    ax.set_xticklabels(["bert", "bert2", "bert3", "word2vec"])
-    all_r_rouge_3 = [np.array(rouge_3_r["0"]), np.array(rouge_3_r["1"]), np.array(rouge_3_r["2"]),
-                     np.array(rouge_3_r["3"])]
+    ax.set_ylim([0, 1])
+    ax.set_xticklabels(["bert", "bert2", "bert3", "bert4", "word2vec"])
+    all_r_rouge_3 = [np.array(rouge_3_r["0"]), np.array(rouge_3_r["1"]), np.array(rouge_3_r["2"]), np.array(rouge_3_r["3"]), np.array(rouge_3_r["4"])]
     bp_p = ax.boxplot(all_r_rouge_3, sym='')
+    ax.set_title("recall 3_gram.")
     plt.savefig("r_rouge_3.png")
 
     fig = plt.figure(figsize=(10, 7))
     ax = fig.add_axes([0.15, 0.1, 0.7, 0.8])
-    ax.set_xticklabels(["bert", "bert2", "bert3", "word2vec"])
-    all_f_rouge_4 = [np.array(rouge_4_f["0"]), np.array(rouge_4_f["1"]), np.array(rouge_4_f["2"]),
-                     np.array(rouge_4_f["3"])]
+    ax.set_ylim([0, 1])
+    ax.set_xticklabels(["bert", "bert2", "bert3", "bert4", "word2vec"])
+    all_f_rouge_4 = [np.array(rouge_4_f["0"]), np.array(rouge_4_f["1"]), np.array(rouge_4_f["2"]), np.array(rouge_4_f["3"]), np.array(rouge_4_f["4"])]
     bp_p = ax.boxplot(all_f_rouge_4, sym='')
+    ax.set_title("f1 score 4_gram.")
     plt.savefig("f_rouge_4.png")
 
     fig = plt.figure(figsize=(10, 7))
     ax = fig.add_axes([0.15, 0.1, 0.7, 0.8])
-    ax.set_xticklabels(["bert", "bert2", "bert3", "word2vec"])
-    all_p_rouge_4 = [np.array(rouge_4_p["0"]), np.array(rouge_4_p["1"]), np.array(rouge_4_p["2"]),
-                     np.array(rouge_4_p["3"])]
+    ax.set_ylim([0, 1])
+    ax.set_xticklabels(["bert", "bert2", "bert3", "bert4", "word2vec"])
+    all_p_rouge_4 = [np.array(rouge_4_p["0"]), np.array(rouge_4_p["1"]), np.array(rouge_4_p["2"]), np.array(rouge_4_p["3"]), np.array(rouge_4_p["4"])]
     bp_p = ax.boxplot(all_p_rouge_4, sym='')
+    ax.set_title("precision 4_gram.")
     plt.savefig("p_rouge_4.png")
 
     fig = plt.figure(figsize=(10, 7))
     ax = fig.add_axes([0.15, 0.1, 0.7, 0.8])
-    ax.set_xticklabels(["bert", "bert2", "bert3", "word2vec"])
-    all_r_rouge_4 = [np.array(rouge_4_r["0"]), np.array(rouge_4_r["1"]), np.array(rouge_4_r["2"]),
-                     np.array(rouge_4_r["3"])]
+    ax.set_ylim([0, 1])
+    ax.set_xticklabels(["bert", "bert2", "bert3", "bert4", "word2vec"])
+    all_r_rouge_4 = [np.array(rouge_4_r["0"]), np.array(rouge_4_r["1"]), np.array(rouge_4_r["2"]), np.array(rouge_4_r["3"]), np.array(rouge_4_r["4"])]
     bp_p = ax.boxplot(all_r_rouge_4, sym='')
+    ax.set_title("recall 4_gram. bert:")
     plt.savefig("r_rouge_4.png")
 
     fig = plt.figure(figsize=(10, 7))
     ax = fig.add_axes([0.15, 0.1, 0.7, 0.8])
-    ax.set_xticklabels(["bert", "bert2", "bert3", "word2vec"])
-    all_f_rouge_l = [np.array(rouge_l_f["0"]), np.array(rouge_l_f["1"]), np.array(rouge_l_f["2"]),
-                     np.array(rouge_l_f["3"])]
+    ax.set_ylim([0, 1])
+    ax.set_xticklabels(["bert", "bert2", "bert3", "bert4", "word2vec"])
+    all_f_rouge_l = [np.array(rouge_l_f["0"]), np.array(rouge_l_f["1"]), np.array(rouge_l_f["2"]), np.array(rouge_l_f["3"]), np.array(rouge_l_f["4"])]
     bp_p = ax.boxplot(all_f_rouge_l, sym='')
+    ax.set_title("f1 score longest common sequence.")
     plt.savefig("f_rouge_l.png")
 
     fig = plt.figure(figsize=(10, 7))
     ax = fig.add_axes([0.15, 0.1, 0.7, 0.8])
-    ax.set_xticklabels(["bert", "bert2", "bert3", "word2vec"])
-    all_p_rouge_l = [np.array(rouge_l_p["0"]), np.array(rouge_l_p["1"]), np.array(rouge_l_p["2"]),
-                     np.array(rouge_l_p["3"])]
+    ax.set_ylim([0, 1])
+    ax.set_xticklabels(["bert", "bert2", "bert3", "bert4", "word2vec"])
+    all_p_rouge_l = [np.array(rouge_l_p["0"]), np.array(rouge_l_p["1"]), np.array(rouge_l_p["2"]), np.array(rouge_l_p["3"]), np.array(rouge_l_p["4"])]
     bp_p = ax.boxplot(all_p_rouge_l, sym='')
+    ax.set_title("precision longest common sequence.")
     plt.savefig("p_rouge_l.png")
 
     fig = plt.figure(figsize=(10, 7))
     ax = fig.add_axes([0.15, 0.1, 0.7, 0.8])
-    ax.set_xticklabels(["bert", "bert2", "bert3", "word2vec"])
-    all_r_rouge_l = [np.array(rouge_l_r["0"]), np.array(rouge_l_r["1"]), np.array(rouge_l_r["2"]),
-                     np.array(rouge_l_r["3"])]
+    ax.set_ylim([0, 1])
+    ax.set_xticklabels(["bert", "bert2", "bert3", "bert4", "word2vec"])
+    all_r_rouge_l = [np.array(rouge_l_r["0"]), np.array(rouge_l_r["1"]), np.array(rouge_l_r["2"]), np.array(rouge_l_r["3"]), np.array(rouge_l_r["4"])]
     bp_p = ax.boxplot(all_r_rouge_l, sym='')
+    ax.set_title("recall longest common sequence.")
     plt.savefig("r_rouge_l.png")
 
     fig = plt.figure(figsize=(10, 7))
     ax = fig.add_axes([0.15, 0.1, 0.7, 0.8])
-    ax.set_xticklabels(["bert", "bert2", "bert3", "word2vec"])
-    all_f_rouge_w = [np.array(rouge_w_f["0"]), np.array(rouge_w_f["1"]), np.array(rouge_w_f["2"]),
-                     np.array(rouge_w_f["3"])]
+    ax.set_ylim([0, 1])
+    ax.set_xticklabels(["bert", "bert2", "bert3", "bert4", "word2vec"])
+    all_f_rouge_w = [np.array(rouge_w_f["0"]), np.array(rouge_w_f["1"]), np.array(rouge_w_f["2"]), np.array(rouge_w_f["3"]), np.array(rouge_w_f["4"]) ]
     bp_p = ax.boxplot(all_f_rouge_w, sym='')
+    ax.set_title("f1 score Weighted LCS-based. ")
     plt.savefig("f_rouge_w.png")
 
     fig = plt.figure(figsize=(10, 7))
     ax = fig.add_axes([0.15, 0.1, 0.7, 0.8])
-    ax.set_xticklabels(["bert", "bert2", "bert3", "word2vec"])
-    all_p_rouge_w = [np.array(rouge_w_p["0"]), np.array(rouge_w_p["1"]), np.array(rouge_w_p["2"]),
-                     np.array(rouge_w_p["3"])]
+    ax.set_ylim([0, 1])
+    ax.set_xticklabels(["bert", "bert2", "bert3", "bert4", "word2vec"])
+    all_p_rouge_w = [np.array(rouge_w_p["0"]), np.array(rouge_w_p["1"]), np.array(rouge_w_p["2"]), np.array(rouge_w_p["3"]), np.array(rouge_w_p["4"])]
     bp_p = ax.boxplot(all_p_rouge_w, sym='')
+    ax.set_title("precision Weighted LCS-based.")
     plt.savefig("p_rouge_w.png")
 
     fig = plt.figure(figsize=(10, 7))
     ax = fig.add_axes([0.15, 0.1, 0.7, 0.8])
-    ax.set_xticklabels(["bert", "bert2", "bert3", "word2vec"])
-    all_r_rouge_w = [np.array(rouge_w_r["0"]), np.array(rouge_w_r["1"]), np.array(rouge_w_r["2"]),
-                     np.array(rouge_w_r["3"])]
+    ax.set_ylim([0, 1])
+    ax.set_xticklabels(["bert", "bert2", "bert3", "bert4", "word2vec"])
+    all_r_rouge_w = [np.array(rouge_w_r["0"]), np.array(rouge_w_r["1"]), np.array(rouge_w_r["2"]), np.array(rouge_w_r["3"]), np.array(rouge_w_r["4"])]
     bp_p = ax.boxplot(all_r_rouge_w, sym='')
+    ax.set_title("recall Weighted LCS-based.")
     plt.savefig("r_rouge_w.png")
-
-
-
-
-
 
 
 

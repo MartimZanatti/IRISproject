@@ -11,8 +11,12 @@ def create_dict_scores(scores, ids_dict):
             num_sentences += 1
             score_aux += scores[int(id) - 1]
 
-        score_paragraph = score_aux / num_sentences
-        paragraphs_scores[key] = score_paragraph
+        if num_sentences > 0:
+            score_paragraph = score_aux / num_sentences
+            paragraphs_scores[key] = score_paragraph
+        else:
+            paragraphs_scores[key] = 0
+
 
     return paragraphs_scores
 

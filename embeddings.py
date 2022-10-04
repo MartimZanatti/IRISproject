@@ -11,11 +11,11 @@ import gensim
 model_name_word2vec = "word2vec.model"
 emb_model = load_word_2_vec(model_name_word2vec)
 
-model_name_bert = 'rufimelo/Legal-SBERTimbau-sts-large-v2'
+model_name_bert = 'rufimelo/Legal-BERTimbau-sts-large-ma-v3'
 
 
 
-def join_all_stanza_sentences(paragraphs):
+def join_all_stanza_sentences(paragraphs, bert):
     ids_dict = {} # dicionario onde a chave é o id do paragrafo e tem uma lista com os ids das frases contidas no paragrafo
     sentence_id = 1
     stanza_text = []
@@ -23,24 +23,30 @@ def join_all_stanza_sentences(paragraphs):
         if p.sumarizable == True:
             ids_dict[str(p.id)] = []
             for s in list(p.stanza_text.sentences):
-                text = get_stanza_text(s)
+                text = get_stanza_text(s, bert)
                 if text:
                     stanza_text.append(text)
                     ids_dict[str(p.id)].append(sentence_id)
                     sentence_id += 1
     return stanza_text, ids_dict
 
-def get_stanza_text(sentence):
+def get_stanza_text(sentence, bert=True):
     text = ''
     for word in sentence.words:
-        text += word.lemma + ' '
+        if not bert:
+            text += word.lemma + ' '
+        else:
+            text += word.text + ' '
     if not check_bad_sentences_division(text):
         return text
     else:
         return False
 
-def create_sim_matrix_word_2_vec(paragraphs):
-    stanza_text, ids_list = join_all_stanza_sentences(paragraphs)
+
+
+
+def create_sim_matrix_word_2_vec(paragraphs, bert):
+    stanza_text, ids_list = join_all_stanza_sentences(paragraphs, bert)
     #print("Stanza_senteces", len(stanza_sentences))
     #print("stanza_text", len(stanza_text))
     similarity_matrix = torch.empty(len(stanza_text), len(stanza_text))
