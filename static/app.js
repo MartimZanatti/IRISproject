@@ -95,7 +95,7 @@ function postFile(file) {
 
     let formData = new FormData();
     formData.append("file", file);
-    fetch("https://pe.inesc-id.pt/sumarizador/", {
+    fetch("./", {
         method: "POST",
         body: formData
     }).then(response => {
