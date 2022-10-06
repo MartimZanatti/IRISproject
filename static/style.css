@@ -13,6 +13,10 @@
     color: var(--primary-red);
 }
 
+.red-link{
+    color: var(--primary-red);
+}
+
 [role=button] {
     cursor: pointer;
 }

@@ -248,7 +248,6 @@ function exportDocx(){
 
 }
 let demo = [
-    {text:"<h6>Bem vindo ao sumarizador do Supremo Tribunal de Justiça</h6>", score: null},
     {text:"<p>Esta aplicação permite ver e extraír os parágrafos mais importantes de um documento.</p>", score: null},
     {text:"<p>Para começar a usar a aplicação insira o documento que quer sumarizar.</p>", score: null},
     {text:"<p>O sumarizador irá dar uma pontuação aos parágrafos, e os sete mais relevantes serão selecionados automáticamente.</p>", score: null},
