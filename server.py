@@ -26,7 +26,6 @@ def handle_post():
     #caixa preta
     resp = subprocess.Popen(f"python black-box-cli.py {uploaded_file.name}", shell=True, stdout=subprocess.PIPE).stdout.read()
     os.unlink(uploaded_file.name)
-    print( resp )
     return resp
 
 

@@ -16,6 +16,8 @@ def black_box(filename):
             json_paragraphs.append({"text": str(paragraph[0]), "score": None})
         else:
             json_paragraphs.append({"text": str(paragraph[0]), "score": paragraph[1]})
+    
+    print(json.dumps(json_paragraphs))
 
 if __name__ == "__main__":
     black_box()
