@@ -2,7 +2,7 @@ from flask import Flask, request, send_file, jsonify, send_from_directory
 from flask_cors import CORS
 import os
 import tempfile
-from main_functions import process_docx_file, create_stanza_sentences, summarization, pos_processing_paragraphs
+import subprocess
 
 app = Flask(__name__)
 CORS(app)
@@ -24,24 +24,13 @@ def handle_post():
     uploaded_file.close()
 
     #caixa preta
-    json_paragraphs = []
-    doc = process_docx_file(uploaded_file.name)
-    doc = create_stanza_sentences(doc)
-    scores, ids_dict = summarization(doc)
-    paragraphs = pos_processing_paragraphs(doc.paragraphs, scores, ids_dict)
-
-    for paragraph in paragraphs:
-        if len(paragraph) == 1:
-            json_paragraphs.append({"text": str(paragraph[0]), "score": None})
-        else:
-            json_paragraphs.append({"text": str(paragraph[0]), "score": paragraph[1]})
-
+    resp = subprocess.Popen(f"python black-box-cli.py {uploaded_file.name}", shell=True, stdout=subprocess.PIPE).stdout.read()
     os.unlink(uploaded_file.name)
-
-    return jsonify(json_paragraphs)
+    return resp
 
 
 
 
 if __name__ == '__main__':
-    app.run(host='127.0.0.1',port=8999)
+    app.run(host='0.0.0.0',port=8999)
+

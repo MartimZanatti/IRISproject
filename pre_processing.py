@@ -129,12 +129,12 @@ def find_final_data(paragraphs):
 
     reversed_paragraphs = paragraphs.copy()
     reversed_paragraphs.reverse()
+    snlp = spacy.load(spacy_model) # faz load do model spacy para as entidades
     for i, paragraph in enumerate(reversed(paragraphs)): # percorre os paragrafos do ultimo ao primeiro
         change_paragraphs.append(paragraph)
         paragraph_text = paragraph.text.get_text()
         count += 1
         if match_foot_note(reversed_paragraphs[i :i + 5]) == False: #verifica se ha foot notes entre i - 5 e i + 1
-            snlp = spacy.load(spacy_model) # faz load do model spacy para as entidades
             doc = snlp(paragraph_text)
             list_ents = list(doc.ents)
             if re.match(PATTERN_DATA, paragraph_text): # caso especiais de datas que não sao apanhadas pelo modelo

@@ -1,0 +1,4 @@
+__pycache__/
+env/
+model-best/
+word2vec.model

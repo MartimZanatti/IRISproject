@@ -13,6 +13,10 @@
     color: var(--primary-red);
 }
 
+.red-link{
+    color: var(--primary-red);
+}
+
 [role=button] {
     cursor: pointer;
 }
@@ -21,7 +25,12 @@ main{
     display: grid;
     grid-template:
         "content extract" / 1fr 99fr;
-    gap: 2em;
+}
+
+par-row[data-par]::before{
+    content: attr(data-par);
+    padding: 0 0.4em 0 0;
+    font-size: 13px;
 }
 
 [slot=content] {
@@ -34,32 +43,48 @@ par-row[data-visible="false"]{
 }
 
 par-row[data-visible="true"]{
-    display: block;
+    display: flex;
+    padding: 0 0.5em 0 0;
 }
 
 [slot=controls]{
     color: var(--primary-gold);
 }
 
+[data-bin] .bi-reception-x:before{
+    font-size: 0.5rem;
+    white-space: break-spaces;
+    padding: 0 0.2rem;
+}
+
 [data-bin="0"] .bi-reception-x:before{
-    content: "\F510";
+    content: "\F584\A\F584\A\F584\A\F584";
     opacity: 0.2;
 }
 [data-bin="1"] .bi-reception-x:before{
-    content: "\F511";
+    content: "\F584\A\F584\A\F584\A\F582";
     opacity: 0.4;
 }
 [data-bin="2"] .bi-reception-x:before{
-    content: "\F512";
+    content: "\F584\A\F584\A\F582\A\F582";
     opacity: 0.6;
 }
 [data-bin="3"] .bi-reception-x:before{
-    content: "\F513";
+    content: "\F584\A\F582\A\F582\A\F582";
     opacity: 0.8;
 }
 [data-bin="4"] .bi-reception-x:before{
-    content: "\F514";
+    content: "\F582\A\F582\A\F582\A\F582";
     opacity: 1;
+}
+
+par-row .clipboard-hover, par-row-extracted .clipboard-hover {
+    opacity: 0;
+    transition: 0.25s opacity, 1.25s color;
+}
+par-row:hover .clipboard-hover, par-row-extracted:hover .clipboard-hover {
+    opacity: 1;
+    transition: 0.75s opacity, 1.25s color;
 }
 
 [data-saved="false"] .bi-bookmark-toggle:before{
@@ -67,10 +92,10 @@ par-row[data-visible="true"]{
 }
 
 [data-saved="true"] .bi-bookmark-toggle:before{
-    content: "\F199";
+    content: "\F1A0";
 }
 
-[data-saved="true"] .bi-bookmark-toggle:hover:before, [data-saved="true"] .bi-bookmark-fill:hover:before{
+[data-saved="true"] .bi-bookmark-toggle:hover:before, [data-saved="true"] .bi-bookmark-x-fill:hover:before{
     color: var(--primary-red)
 }
 
@@ -86,4 +111,25 @@ par-row:target{
     from {background-color: initial;}
     10% {background-color: var(--secondary-gold);}
     to {background-color: initial;}
+  }
+
+  /* ===== Scrollbar CSS ===== */
+  /* Firefox */
+  * {
+    scrollbar-width: none;
+    scrollbar-color: var(--primary-gold) var(--secondary-gold);
+  }
+
+  /* Chrome, Edge, and Safari */
+  *::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: var(--secondary-gold);
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: var(--primary-gold);
+    border-radius: 10px;
   }

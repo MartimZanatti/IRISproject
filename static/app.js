@@ -95,7 +95,7 @@ function postFile(file) {
 
     let formData = new FormData();
     formData.append("file", file);
-    fetch("https://pe.inesc-id.pt/sumarizador/", {
+    fetch("./", {
         method: "POST",
         body: formData
     }).then(response => {
@@ -132,11 +132,6 @@ function createDocumentParagraph(htmlContent,parNumber, bin){
     par.dataset.saved = false;
     par.dataset.visible = true;
     par.id = `par-${parNumber}`;
-
-    let number = document.createElement("span");
-    number.slot = "number";
-    number.textContent = parNumber;
-    par.appendChild(number);
 
     let content = document.createElement("div");
     content.slot = "content"
@@ -252,6 +247,18 @@ function exportDocx(){
     })
 
 }
+let demo = [
+    {text:"<p>Esta aplicação permite ver e extraír os parágrafos mais importantes de um documento.</p>", score: null},
+    {text:"<p>Para começar a usar a aplicação insira o documento que quer sumarizar.</p>", score: null},
+    {text:"<p>O sumarizador irá dar uma pontuação aos parágrafos, e os sete mais relevantes serão selecionados automáticamente.</p>", score: null},
+    {text:"<p>O utilizador poderá então controlar de forma total os parágrafos selecionados. Estes aparecem na area direita da aplicação.</p>", score: 1},
+    {text:"<p>No final os parágrafos selecionados podem ser extraídos para um documento DOCX.</p>", score: null},
+
+
+];
+
+showResponse(demo);
+
 
 let r = [
     {
