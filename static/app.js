@@ -93,6 +93,7 @@ function postFile(file) {
         fk.remove();
     }
 
+    showProgress("10%")
     let formData = new FormData();
     formData.append("file", file);
     fetch("./", {
@@ -104,6 +105,9 @@ function postFile(file) {
     }).then(json => {
         showProgress("85%")
         showResponse(json);
+    }).catch(e => {
+        console.log(e);
+        alert("Error! " + JSON.stringify(e))
     }).finally(() => {
         postFile.processingPost = false;
         hideProgress();
