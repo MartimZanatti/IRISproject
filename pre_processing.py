@@ -146,20 +146,24 @@ def find_final_data(paragraphs):
                         entities[str(id_ent)] = (ent.text, ent.label_, i)
                         id_ent += 1
                     if ent.label_ == "DAT":  # se a entidade for data
-                        if entities[str(id_ent - 2)][1] == "LOC" and entities[str(id_ent - 2)][2] == i \
-                                and paragraph_only_ent(paragraph_text, list_ents):  # se a entidade seguinte for uma localidade e este paragrafo so tiver entidades
-                            change_paragraphs_sumarizable(change_paragraphs, False)
-                            change_paragraphs = []
-                            break
-                        elif entities[str(id_ent - 2)][1] == "ORG" and entities[str(id_ent - 2)][2] == i \
-                            and paragraph_only_ent(paragraph_text, list_ents):  # se a entidade seguinte for uma organização
-                            change_paragraphs_sumarizable(change_paragraphs, False)
-                            change_paragraphs = []
-                            break
-                        elif len(list_ents) == 1 and paragraph_only_ent(paragraph_text, list_ents): # se for so a data
-                            change_paragraphs_sumarizable(change_paragraphs, False)
-                            change_paragraphs = []
-                            break
+                        try:
+                            if entities[str(id_ent - 2)][1] == "LOC" and entities[str(id_ent - 2)][2] == i \
+                                    and paragraph_only_ent(paragraph_text, list_ents):  # se a entidade seguinte for uma localidade e este paragrafo so tiver entidades
+                                change_paragraphs_sumarizable(change_paragraphs, False)
+                                change_paragraphs = []
+                                break
+                            elif entities[str(id_ent - 2)][1] == "ORG" and entities[str(id_ent - 2)][2] == i \
+                                and paragraph_only_ent(paragraph_text, list_ents):  # se a entidade seguinte for uma organização
+                                change_paragraphs_sumarizable(change_paragraphs, False)
+                                change_paragraphs = []
+                                break
+                            elif len(list_ents) == 1 and paragraph_only_ent(paragraph_text, list_ents): # se for so a data
+                                change_paragraphs_sumarizable(change_paragraphs, False)
+                                change_paragraphs = []
+                                break
+                        except KeyError:
+                            # TODO: ...
+                            pass
 
         if count == 50:
             break

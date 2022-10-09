@@ -107,7 +107,7 @@ function postFile(file) {
         showResponse(json);
     }).catch(e => {
         console.log(e);
-        alert("Error! " + JSON.stringify(e))
+        alert("Error! " + e)
     }).finally(() => {
         postFile.processingPost = false;
         hideProgress();
