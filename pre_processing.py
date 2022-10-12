@@ -13,7 +13,7 @@ EXCLUDE_upper = [x.upper() for x in EXCLUDE]
 PATTERN_DATA = r"\d{1,2}(-|\.|/)\d{1,2}(-|\.|/)\d{4}"
 TITLE = ["relatório", "fundamentação", "decisão", "facto", "direito", "questão decidir", "enquadramento", "(in)admissibilidade recurso",
           "objecto recurso", "objeto recurso", "cumpre decidir", "apreciando", "questão resolver", "inconstitucionalidade", "nulidade", "direito fundamental",
-          "reenvio prejudical", "incuprimento", "prescição", "litigância"    ]
+          "reenvio prejudical", "incuprimento", "prescição", "litigância"]
 TITLES = ["relatórios", "fundamentações", "decisões", "factos", "direitos", "questões decidir", "enquadramentos", "(in)admissibilidades recursos",
           "objectos recursos", "objetos recursos", "cumpre decidir", "apreciando", "questões resolver", "inconstitucionalidades", "nulidades", "direitos fundamentais",
           "reenvios prejudicais", "incuprimentos", "prescrições", "litigâncias"]
@@ -126,27 +126,28 @@ def find_final_data(paragraphs):
     id_ent = 1
     change_paragraphs = []
     count = 0
-
     reversed_paragraphs = paragraphs.copy()
     reversed_paragraphs.reverse()
     snlp = spacy.load(spacy_model) # faz load do model spacy para as entidades
     for i, paragraph in enumerate(reversed(paragraphs)): # percorre os paragrafos do ultimo ao primeiro
         change_paragraphs.append(paragraph)
         paragraph_text = paragraph.text.get_text()
-        count += 1
-        if match_foot_note(reversed_paragraphs[i :i + 5]) == False: #verifica se ha foot notes entre i - 5 e i + 1
+        if match_foot_note(reversed_paragraphs[i :i + 5]) == False and paragraph.foot_note == False: #verifica se ha foot notes entre i - 5 e i + 1
+            count += 1
             doc = snlp(paragraph_text)
             list_ents = list(doc.ents)
             if re.match(PATTERN_DATA, paragraph_text): # caso especiais de datas que não sao apanhadas pelo modelo
                 text = re.match(PATTERN_DATA, paragraph_text).group(0)
-                list_ents.append(fake_entity("DAT", text))
+                if check_if_fake_entity_already_exist(list_ents, text) == False:
+                    list_ents.append(fake_entity("DAT", text))
             if list_ents != []:
                 for ent in list_ents:
-                    if not re.match("\s*[0-9]+ª+\s*", ent.text): #caso especial para entidades mal associadas
-                        entities[str(id_ent)] = (ent.text, ent.label_, i)
-                        id_ent += 1
+                    if re.match("\s*[0-9]+ª+\s*", ent.text) or not paragraph_only_ent(paragraph_text, list_ents): #caso especial para entidades mal associadas ou para paragrafos com mais que entidades
+                        continue
+                    entities[str(id_ent)] = (ent.text, ent.label_, i)
+                    id_ent += 1
                     if ent.label_ == "DAT":  # se a entidade for data
-                        try:
+                        if len(entities) > 1:
                             if entities[str(id_ent - 2)][1] == "LOC" and entities[str(id_ent - 2)][2] == i \
                                     and paragraph_only_ent(paragraph_text, list_ents):  # se a entidade seguinte for uma localidade e este paragrafo so tiver entidades
                                 change_paragraphs_sumarizable(change_paragraphs, False)
@@ -157,17 +158,18 @@ def find_final_data(paragraphs):
                                 change_paragraphs_sumarizable(change_paragraphs, False)
                                 change_paragraphs = []
                                 break
-                            elif len(list_ents) == 1 and paragraph_only_ent(paragraph_text, list_ents): # se for so a data
-                                change_paragraphs_sumarizable(change_paragraphs, False)
-                                change_paragraphs = []
-                                break
-                        except KeyError:
-                            # TODO: ...
-                            pass
-
+                        if len(list_ents) == 1:
+                            change_paragraphs_sumarizable(change_paragraphs, False)
+                            change_paragraphs = []
+                            break
         if count == 50:
             break
 
+def check_if_fake_entity_already_exist(list_ents, fake_ent_text):
+    for ent in list_ents:
+        if ent.text == fake_ent_text:
+            return True
+    return False
 
 def remove_stop_words(paragraph_text):
     p_spaces = paragraph_text.split(' ')
