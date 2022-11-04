@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -10,6 +11,7 @@
     <script src="https://unpkg.com/docx@7.1.0/build/index.js"></script>
     <script defer src="app.js"></script>
 </head>
+
 <body class="d-flex flex-column vh-100">
     <header class="mb-1 py-2 align-items-center d-flex flex-wrap border-bottom">
         <div class="progress w-100" id="progress-parent" hidden>
@@ -21,12 +23,20 @@
                 <h5 class="m-0 fancy-font">Sumarizador</h5>
             </div>
         </a>
+        <div class="flex-fill d-none d-lg-block"></div>
+        <nav class="d-print-none">
+            <ul class="container d-flex nav align-items-center justify-content-evenly flex-wrap">
+                <li class="nav-link py-1 px-2 mx-1"><a class="border-0 nav-link fs-6 bg-transparent red-link fw-bold"
+                        role="button" data-bs-toggle="modal" data-bs-target="#modal-about">Sobre</a></li>
+            </ul>
+        </nav>
         <div class="w-100  row">
             <div class="col-6 d-flex align-items-baseline">
                 <input class="form-control form-control-sm" id="file" type="file" name="file" hidden>
-                <h5>Documento <small class="fw-bold" id="title"></small><small class="fw-normal red-link" role="button" id="fake-input">(Inserir documento aqui)</small></h5>
+                <h5>Documento <small class="fw-bold" id="title"></small><small class="fw-normal red-link" role="button"
+                        id="fake-input">(Inserir documento aqui)</small></h5>
                 <div class="ms-1">
-                    Mostrar: 
+                    Mostrar:
                     <u role="button" class="fw-bold m-1" onclick="showTop(0)">Todos</u>
                     <u role="button" class="fw-bold m-1" onclick="showTop(4)">Top 5</u>
                     <u role="button" class="fw-bold m-1" onclick="showTop(3)">Top 10</u>
@@ -35,17 +45,25 @@
                 </div>
             </div>
             <div class="col-6 d-flex align-items-baseline justify-content-end">
-                <h5>Parágrafos Selecionados <small class="fw-normal red-link" role="button" onclick="exportDocx()">(Exportar <i role="button" class="fw-bold p-1 m-1 bi bi-filetype-docx"></i>)</small></h5>
+                <h5>Parágrafos Selecionados <small class="fw-normal red-link" role="button"
+                        onclick="exportDocx()">(Exportar <i role="button"
+                            class="fw-bold p-1 m-1 bi bi-filetype-docx"></i>)</small></h5>
             </div>
         </div>
     </header>
     <main class="flex-grow-1 p-2 overflow-auto">
-        <div class="border-end" style="grid-area: content; overflow: auto; resize: horizontal; width: 50vw; scroll-behavior: smooth;">
+        <div class="border-end"
+            style="grid-area: content; overflow: auto; resize: horizontal; width: 50vw; scroll-behavior: smooth;">
             <template id="par-row-template">
-                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap-grid.min.css">
+                <link rel="stylesheet"
+                    href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap-grid.min.css">
                 <div class="d-flex flex-grow-1">
-                    <div class="flex-grow-1"><slot name="content"></slot></div>
-                    <div class="flex-shrink-1"><slot name="controls"></slot></div>
+                    <div class="flex-grow-1">
+                        <slot name="content"></slot>
+                    </div>
+                    <div class="flex-shrink-1">
+                        <slot name="controls"></slot>
+                    </div>
                 </div>
             </template>
             <template id="controls-template">
@@ -64,7 +82,8 @@
                         <i class="bi bi-reception-x" title="Relevância"></i>
                         <div class="d-flex flex-column">
                             <i class="bi bi-bookmark-toggle" role="button" onclick="toggleParagraph(this)"></i>
-                            <i class="bi bi-clipboard clipboard-hover" role="button" onclick="copyToClipboard(this)"></i>
+                            <i class="bi bi-clipboard clipboard-hover" role="button"
+                                onclick="copyToClipboard(this)"></i>
                         </div>
                     </div>
                 </par-row>
@@ -72,10 +91,15 @@
         </div>
         <div style="grid-area: extract; overflow: auto;">
             <template id="par-row-extracted-template">
-                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap-grid.min.css">
+                <link rel="stylesheet"
+                    href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap-grid.min.css">
                 <div class="d-flex flex-grow-1">
-                    <div class="flex-shrink-1"><slot name="controls"></slot></div>
-                    <div class="flex-grow-1"><slot name="content"></slot></div>
+                    <div class="flex-shrink-1">
+                        <slot name="controls"></slot>
+                    </div>
+                    <div class="flex-grow-1">
+                        <slot name="content"></slot>
+                    </div>
                 </div>
             </template>
             <template id="extracted-controls-template">
@@ -83,12 +107,94 @@
                     <div class="d-flex flex-column">
                         <i class="bi bi-bookmark-toggle" role="button" onclick="toggleExctractedParagraph(this)"></i>
                         <i class="bi bi-clipboard clipboard-hover" role="button" onclick="copyToClipboard(this)"></i>
-                        <a id="link-par" class="clipboard-hover" style="color: var(--primary-gold);"><i class="bi bi-arrow-left-circle"></i></a>
+                        <a id="link-par" class="clipboard-hover" style="color: var(--primary-gold);"><i
+                                class="bi bi-arrow-left-circle"></i></a>
                     </div>
                 </div>
             </template>
             <div id="sentences"></div>
         </div>
     </main>
+    <div class="modal fade" id="modal-about" tabindex="-1" role="dialog" aria-labelledby="modal-label" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div>
+                        <h5 class="modal-title" id="modal-label">Sobre o Sumarizador</h5>
+                        <p class="m-0">Ferramenta para apoio à criação de sumários de acórdãos desenvolvida para utilização pelos juízes do STJ.</p>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <h6>Prespectiva geral</h6>
+                    <p>Em cada momento o documento que está a ser trabalhado pode ser visualizado no lado esquerdo do browser. No lado direito aparecem os parágrafos selecionados para a extração.</p>
+                    <h6>Símbologia</h6>
+                    <ul>
+                        <li>
+                            <div class="d-flex align-items-baseline">
+                                <div data-bin="0">
+                                    <div slot="controls"><i class="bi bi-reception-x" title="Relevância"></i></div> 
+                                </div>
+                                <div data-bin="1">
+                                    <div slot="controls"><i class="bi bi-reception-x" title="Relevância"></i></div> 
+                                </div>
+                                <div data-bin="2">
+                                    <div slot="controls"><i class="bi bi-reception-x" title="Relevância"></i></div> 
+                                </div>
+                                <div data-bin="3">
+                                    <div slot="controls"><i class="bi bi-reception-x" title="Relevância"></i></div> 
+                                </div>
+                                <div data-bin="4">
+                                    <div slot="controls"><i class="bi bi-reception-x" title="Relevância"></i></div> 
+                                </div>
+                                <div>
+                                    Relevância calculada automáticamente.
+                                </div>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="d-flex align-items-baseline">
+                                <div data-saved="false">
+                                    <div slot="controls"><i class="bi bi-bookmark-toggle"></i></div>
+                                </div>
+                                <div>
+                                    Selecionar parágrafo.
+                                </div>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="d-flex align-items-baseline">
+                                <div data-saved="true">
+                                    <div slot="controls"><i class="bi bi-bookmark-toggle"></i></div>
+                                </div> 
+                                <div>
+                                    Des-selecionar parágrafo.
+                                </div>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="d-flex align-items-baseline">
+                                <div>
+                                    <div slot="controls"><i class="bi bi-clipboard clipboard-hover"></i></div>
+                                </div> 
+                                <div>
+                                    Copiar parágrafo.
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <div class="flex-grow-1">
+                        <div>
+                            <small>Documentos Google Drive:&nbsp;<a href="https://docs.google.com/document/d/1wiiQl1joc6iV8SZCvBdfbc4IKHuy7x0Dp0HnIzexajw/edit?usp=sharing" class="red-link text-decoration-none" target="_blank">Sumarização - Ajuda</a></small>
+                        </div>
+                        <div><small>Código disponível em: <a href="https://github.com/stjiris/sumarizador" target="_blank" class="red-link text-decoration-none"><i class="bi bi-github"></i>stjiris/sumarizador</a></small></div>
+                    </div>
+                    <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 </body>
 </html>
