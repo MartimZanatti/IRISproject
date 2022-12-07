@@ -30,11 +30,13 @@
                         role="button" data-bs-toggle="modal" data-bs-target="#modal-about">Sobre</a></li>
             </ul>
         </nav>
-        <div class="w-100  row">
-            <div class="col-6 d-flex align-items-baseline">
-                <input class="form-control form-control-sm" id="file" type="file" name="file" hidden>
-                <span>Documento <small class="fw-bold" id="title"></small><small class="fw-normal red-link" role="button"
-                        id="fake-input">(Inserir documento aqui)</small></span>
+        <div class="w-100 row align-items-end">
+            <div class="col-6">
+				<div>
+	                <input class="form-control form-control-sm" id="file" type="file" name="file" hidden>
+    	            <span>Documento <small class="fw-bold" id="title"></small><small class="fw-normal red-link" role="button"
+        	                id="fake-input">(Inserir documento aqui)</small></span>
+				</div>
                 <div class="ms-1">
                     Mostrar:
                     <u role="button" class="fw-bold m-1" onclick="showTop(0)">Todos</u>
