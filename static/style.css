@@ -21,6 +21,10 @@
     cursor: pointer;
 }
 
+header{
+	background: var(--secondary-gold);
+}
+
 main{
     display: grid;
     grid-template:
