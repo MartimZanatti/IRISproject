@@ -7,13 +7,13 @@ RUN apt-get update && apt-get install -y pandoc git-lfs
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY download-stopwords.py ./
-RUN python download-stopwords.py
+#COPY download-stopwords.py ./
+#RUN python download-stopwords.py
 
-RUN git clone https://gitlab.com/diogoalmiro/iris-lfs-storage.git
-RUN cd iris-lfs-storage && git lfs pull
-RUN mv iris-lfs-storage/word2vec.model .
-RUN mv iris-lfs-storage/model-best/ .
+#RUN git clone https://gitlab.com/diogoalmiro/iris-lfs-storage.git
+#RUN cd iris-lfs-storage && git lfs pull
+#RUN mv iris-lfs-storage/word2vec.model .
+#RUN mv iris-lfs-storage/model-best/ .
 
 COPY . . 
 
