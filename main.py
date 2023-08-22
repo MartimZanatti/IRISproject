@@ -1,30 +1,60 @@
 import os
-from main_functions import  process_docx_file, create_stanza_sentences, summarization, pos_processing_paragraphs, process_sum_to_files, rouge_main, box_plot_main
+from main_functions import  process_docx_file, create_stanza_sentences, summarization, pos_processing_paragraphs, process_sum_to_files, rouge_main, box_plot_main, box_plot_main_2, get_num_paragraphs
+import torch
+from emb_models import load_bert_model
+from emb_models import load_word_2_vec
 
 def main():
 
 
-    path = '../IrisDataset/Acordaos/20210309_1sec/'
-    #path = '../IrisDataset/exp/'
+    torch.cuda.set_device(2)
+
+    """
+    model_name_bert = "rufimelo/bert-large-portuguese-cased-legal-tsdae-gpl-nli-sts-v0-assins"
+
+    model = load_bert_model(model_name_bert)
+
+    #model_name_word2vec = "word2vec.model"
+    #model = load_word_2_vec(model_name_word2vec)
+
+    path = '../IrisDataset/Acordaos/'
+    path_done = '../IrisDataset/results_paper/rufimelobert-large-portuguese-cased-legal-tsdae-gpl-nli-sts-v0-assins/'
     files = os.listdir(path)
+    files_done = os.listdir(path_done)
     for file_name in files:
-        print(file_name)
-        doc = process_docx_file(path + file_name, preprocessing=False)
-        doc = create_stanza_sentences(doc)
-        scores, ids_dict = summarization(doc)
+        #print(file_name)
+        if file_name not in files_done:
+            doc = process_docx_file(path + file_name, preprocessing=True)
+            doc = create_stanza_sentences(doc)
+            scores, ids_dict = summarization(doc, model)
 
-        #paragraphs = pos_processing_paragraphs(doc.paragraphs, scores, ids_dict)
+            num_sum = 0
 
-        "para efeitos de correr varios e po-los em ficheiros usar esta funcão"
+            #paragraphs = pos_processing_paragraphs(doc.paragraphs, scores, ids_dict)
 
-        process_sum_to_files(doc.paragraphs, scores, ids_dict, file_name, 5)
+            "para efeitos de correr varios e po-los em ficheiros usar esta funcão"
+
+            num_paragraphs = get_num_paragraphs(path + file_name)
 
 
 
-    #rouge_main('../IrisDataset/automatic_sumaries/20210309_1sec_word_2_vec_no_pre_processing/', '../IrisDataset/Sumarios/20210309_1sec/', '../IrisDataset/rouge_scores/word2vec_no_preprocessing/')
+            process_sum_to_files(doc.paragraphs, scores, ids_dict, file_name, num_paragraphs, path_done)
 
-    #box_plot_main(['../IrisDataset/rouge_scores/bert/','../IrisDataset/rouge_scores/bert2/', '../IrisDataset/rouge_scores/bert3/', '../IrisDataset/rouge_scores/bert4/', '../IrisDataset/rouge_scores/word2vec/'])
 
+
+
+
+
+        """
+
+
+
+
+    #rouge_main('../IrisDataset/results_paper/stjirisbert-large-portuguese-cased-legal-tsdae/', '../IrisDataset/Sumarios/', '../IrisDataset/results_paper/stjirisbert-large-portuguese-cased-legal-tsdae_rouge/')
+
+    #box_plot_main(['../IrisDataset/results_paper/word_2_vec_with_pre_processing_rouge/','../IrisDataset/results_paper/stjirisbert-large-portuguese-cased-legal-mlm-sts-v0_rouge/', '../IrisDataset/results_paper/stjirisbert-large-portuguese-cased-legal-tsdae-sts-v0_rouge/', '../IrisDataset/results_paper/stjirisbert-large-portuguese-cased-legal-tsdae-gpl-nli-sts-v0_rouge/', '../IrisDataset/results_paper/bertimbau_rouge/', '../IrisDataset/results_paper/stjirisbert-large-portuguese-cased-legal-tsdae_rouge/', '../IrisDataset/results_paper/rufimelobert-large-portuguese-cased-legal-tsdae-gpl-v0_rouge/'])
+
+    #box_plot_main_2(['../IrisDataset/results_paper/stjirisbert-large-portuguese-cased-legal-tsdae-gpl-nli-sts-v0_rouge/', '../IrisDataset/results_paper/stjirisbert-large-portuguese-cased-legal-tsdae-gpl-nli-sts-v0_no_preprocessing_rouge/'])
 
 
 

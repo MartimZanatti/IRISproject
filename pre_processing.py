@@ -5,9 +5,10 @@ import spacy
 from fake_entity import fake_entity
 
 
-EXCLUDE = ['Tribunal','Réu','Reu','Ré','Supremo Tribunal de Justiça',"STJ","Supremo Tribunal",
+EXCLUDE = ['Tribunal','Réu','Reu','Ré','Supremo Tribunal de Justiça', 'Supremo Tribunal da Justiça', "Supremo tribunal de Justiça", "STJ","Supremo Tribunal",
             'Requerida','Autora','Instância','Relação','Supremo','Recorrente','Recorrida'
             'Tribual da Relação']
+props = ["em"]
 EXCLUDE_lower = [x.lower() for x in EXCLUDE]
 EXCLUDE_upper = [x.upper() for x in EXCLUDE]
 PATTERN_DATA = r"\d{1,2}(-|\.|/)\d{1,2}(-|\.|/)\d{4}"
@@ -116,54 +117,88 @@ def paragraph_only_ent(paragraph, ents): # funcao que verifica se um paragrafo s
                 max_match_upper = len(e)
     if max_match_upper != 0 and word not in [ent.text for ent in ents]:
         paragraph = paragraph.replace(word_upper,'')
+    for prop in props:
+        if prop in paragraph:
+            #print(paragraph)
+            paragraph = paragraph.replace(' ' + prop + ' ', '')
     paragraph = paragraph.replace(' ', '')
+    #print("para", paragraph)
+    #print("ent", ents_text)
     if paragraph == ents_text:
         return True
     return False
 
 def find_final_data(paragraphs):
+    found_date = False
     entities = {}
     id_ent = 1
     change_paragraphs = []
     count = 0
     reversed_paragraphs = paragraphs.copy()
     reversed_paragraphs.reverse()
+    paragraphs_with_ent = []
+    num_people = 0
     snlp = spacy.load(spacy_model) # faz load do model spacy para as entidades
     for i, paragraph in enumerate(reversed(paragraphs)): # percorre os paragrafos do ultimo ao primeiro
         change_paragraphs.append(paragraph)
         paragraph_text = paragraph.text.get_text()
         if match_foot_note(reversed_paragraphs[i :i + 5]) == False and paragraph.foot_note == False: #verifica se ha foot notes entre i - 5 e i + 1
+            #print(paragraph_text)
             count += 1
             doc = snlp(paragraph_text)
             list_ents = list(doc.ents)
-            if re.match(PATTERN_DATA, paragraph_text): # caso especiais de datas que não sao apanhadas pelo modelo
-                text = re.match(PATTERN_DATA, paragraph_text).group(0)
+            if re.search(PATTERN_DATA, paragraph_text): # caso especiais de datas que não sao apanhadas pelo modelo
+                text = re.search(PATTERN_DATA, paragraph_text).group(0)
                 if check_if_fake_entity_already_exist(list_ents, text) == False:
                     list_ents.append(fake_entity("DAT", text))
             if list_ents != []:
+                if is_person(paragraph_text, list_ents) or paragraph_only_ent(paragraph_text, list_ents):
+                    paragraphs_with_ent.append(paragraph_text)
                 for ent in list_ents:
                     if re.match("\s*[0-9]+ª+\s*", ent.text) or not paragraph_only_ent(paragraph_text, list_ents): #caso especial para entidades mal associadas ou para paragrafos com mais que entidades
+                        #print(ent)
                         continue
                     entities[str(id_ent)] = (ent.text, ent.label_, i)
+                    #print(entities)
                     id_ent += 1
-                    if ent.label_ == "DAT":  # se a entidade for data
+                    if ent.label_ == "DAT" or ent.label_ == "LOC":  # se a entidade for data
                         if len(entities) > 1:
                             if entities[str(id_ent - 2)][1] == "LOC" and entities[str(id_ent - 2)][2] == i \
                                     and paragraph_only_ent(paragraph_text, list_ents):  # se a entidade seguinte for uma localidade e este paragrafo so tiver entidades
-                                change_paragraphs_sumarizable(change_paragraphs, False)
+                                #change_paragraphs_sumarizable(change_paragraphs, False)
+                                change_final_date(change_paragraphs, True, paragraphs_with_ent)
                                 change_paragraphs = []
+                                found_date = True
                                 break
                             elif entities[str(id_ent - 2)][1] == "ORG" and entities[str(id_ent - 2)][2] == i \
                                 and paragraph_only_ent(paragraph_text, list_ents):  # se a entidade seguinte for uma organização
-                                change_paragraphs_sumarizable(change_paragraphs, False)
+                                #change_paragraphs_sumarizable(change_paragraphs, False)
+                                change_final_date(change_paragraphs, True, paragraphs_with_ent)
                                 change_paragraphs = []
+                                found_date = True
                                 break
                         if len(list_ents) == 1:
-                            change_paragraphs_sumarizable(change_paragraphs, False)
-                            change_paragraphs = []
-                            break
-        if count == 50:
+                            if paragraph_text in paragraphs_with_ent:
+                                #change_paragraphs_sumarizable(change_paragraphs, False)
+                                change_final_date(change_paragraphs, True, paragraphs_with_ent)
+                                change_paragraphs = []
+                                found_date = True
+                                break
+                    elif ent.label_ == "PER":
+                        if len(list_ents) == 1:
+                            if paragraph_text in paragraphs_with_ent:
+                                #change_paragraphs_sumarizable(change_paragraphs, False)
+                                change_final_date(change_paragraphs, True, paragraphs_with_ent)
+                                change_paragraphs = []
+                                num_people += 1
+                                break
+
+        if found_date or num_people == 3:
             break
+
+
+
+
 
 def check_if_fake_entity_already_exist(list_ents, fake_ent_text):
     for ent in list_ents:
@@ -183,8 +218,9 @@ def before_italic_and_small_paragraphs(paragraphs):
     for i,paragraph in enumerate(paragraphs):
         if paragraph.italic == True:
             t = paragraphs[i-1].text.get_text().strip()
-            if t[-1] == ":":
-                paragraphs[i-1].sumarizable = False
+            if len(t) > 0:
+                if t[-1] == ":":
+                    paragraphs[i-1].sumarizable = False
         else:
             text = remove_stop_words(paragraph.text.get_text().strip())
             if len(text.split(' ')) <= 3:
@@ -193,6 +229,22 @@ def before_italic_and_small_paragraphs(paragraphs):
 def change_paragraphs_sumarizable(paragraphs, value):
     for p in paragraphs:
         p.sumarizable = value
+
+
+def change_final_date(paragraphs, value, p_with_ent):
+    for i,p in enumerate(paragraphs):
+        p.final_date = value
+        if p.foot_note == False:
+            if p.text.get_text() not in p_with_ent:
+                p.declaracao = True
+
+
+def is_person(paragraph_text, list_ents):
+    for ent in list_ents:
+        if ent.label_ == "PER":
+            if re.match(ent.text, paragraph_text):
+                return True
+
 
 
 # fim do pre-processamento para saber se um paragrafo é ou nao sumarizavel
