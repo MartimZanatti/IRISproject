@@ -1,10 +1,7 @@
-"""
-LexRank implementation
-Source: https://github.com/crabcamp/lexrank/tree/dev
-"""
-
 import numpy as np
 from scipy.sparse.csgraph import connected_components
+import torch
+import torch.nn as nn
 
 
 def degree_centrality_scores(
@@ -52,7 +49,7 @@ def _power_method(transition_matrix, increase_power=True):
     while True:
         eigenvector_next = np.dot(transition, eigenvector)
 
-        if np.allclose(eigenvector_next, eigenvector, equal_nan=True):
+        if np.allclose(eigenvector_next, eigenvector):
             return eigenvector_next
 
         eigenvector = eigenvector_next
@@ -134,3 +131,49 @@ def stationary_distribution(
         distribution /= n_1
 
     return distribution
+
+
+# function added by me
+
+def lex_rank_emb(emb, cont=None):
+    similarity_matrix = torch.empty(len(emb), len(emb))  # similarity between paragraphs
+    cos = nn.CosineSimilarity(dim=0, eps=1e-8)
+
+    for i, p in enumerate(emb):
+        for j, p2 in enumerate(emb):
+            similarity_matrix[i, j] = cos(p, p2)
+
+    # calculate the scores of each sentence via lexRank algorithm
+    if cont:
+        scores = degree_centrality_scores(similarity_matrix, threshold=None)
+    else:
+        scores = degree_centrality_scores(similarity_matrix, threshold=0.5)
+
+    top_n_idx = np.argsort(scores)
+
+    scores = np.sort(scores)
+
+    scores = np.flip(scores)
+
+    top_n_idx = np.flip(top_n_idx)
+
+    return top_n_idx, scores
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -6,7 +6,7 @@ def load_word_2_vec(model_name):
 
 
 
-def load_bert_model(model_name):
-    return SentenceTransformer(model_name)
+def load_bert_model(model_name, device="cpu"):
+    return SentenceTransformer(model_name, device)
 
 

@@ -1,4 +1,4 @@
-from emb_models import load_word_2_vec, load_bert_model
+
 from pre_processing import check_bad_sentences_division
 import torch
 import torch.nn as nn
@@ -8,10 +8,10 @@ import gensim
 # embeddings usando word_2_vec
 
 
-model_name_word2vec = "word2vec.model"
-emb_model = load_word_2_vec(model_name_word2vec)
 
-model_name_bert = 'rufimelo/Legal-BERTimbau-sts-large-ma-v3'
+
+
+
 
 
 
@@ -32,9 +32,13 @@ def join_all_stanza_sentences(paragraphs, bert):
 
 def get_stanza_text(sentence, bert=True):
     text = ''
+
     for word in sentence.words:
         if not bert:
-            text += word.lemma + ' '
+            if word.lemma is None:
+                text += word.text + ' '
+            else:
+                text += word.lemma + ' '
         else:
             text += word.text + ' '
     if not check_bad_sentences_division(text):
@@ -45,7 +49,7 @@ def get_stanza_text(sentence, bert=True):
 
 
 
-def create_sim_matrix_word_2_vec(paragraphs, bert):
+def create_sim_matrix_word_2_vec(paragraphs, emb_model, bert):
     stanza_text, ids_list = join_all_stanza_sentences(paragraphs, bert)
     #print("Stanza_senteces", len(stanza_sentences))
     #print("stanza_text", len(stanza_text))
@@ -74,12 +78,11 @@ def create_sim_matrix_word_2_vec(paragraphs, bert):
 
     return similarity_matrix, ids_list
 
-def create_sim_matrix_bert(paragraphs):
-    stanza_text, ids_list = join_all_stanza_sentences(paragraphs)
+def create_sim_matrix_bert(paragraphs, model):
+    stanza_text, ids_list = join_all_stanza_sentences(paragraphs,True)
     similarity_matrix = torch.empty(len(stanza_text), len(stanza_text))
     cos = nn.CosineSimilarity(dim=0, eps=1e-8)
     vector_dict = {}
-    model = load_bert_model(model_name_bert)
     for i in range(len(stanza_text)):
         for j in range(len(stanza_text)):
             if str(i) not in vector_dict:  # se ainda não tivermos a matrix da respectiva frase
