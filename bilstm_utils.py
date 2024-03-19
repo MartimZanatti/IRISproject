@@ -1,6 +1,6 @@
 import torch
 import pickle
-from emb_model import load_bert_model
+from emb_models import load_bert_model
 
 
 

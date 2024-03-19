@@ -4,10 +4,11 @@ from usage import usage_one_doc
 
 @click.command()
 @click.argument('filename', type=click.Path(exists=True))
+@click.argument('file_extension')
 
-def black_box(filename):
+def black_box(filename, file_extension):
     json_paragraphs = []
-    considered_paragraphs, scores = usage_one_doc(filename)
+    considered_paragraphs, scores = usage_one_doc(filename, file_extension)
 
     for paragraph in considered_paragraphs:
         if len(paragraph) == 1:
@@ -20,21 +21,8 @@ def black_box(filename):
 
     print(json.dumps(json_paragraphs))
 
-    #for paragraph in best_paragraphs:
 
-    """"
-    #doc = process_docx_file(filename)
-    #doc = create_stanza_sentences(doc)
-    #scores, ids_dict = summarization(doc)
-    #paragraphs = pos_processing_paragraphs(doc.paragraphs, scores, ids_dict)
 
-    for paragraph in paragraphs:
-        if len(paragraph) == 1:
-            json_paragraphs.append({"text": str(paragraph[0]), "score": None})
-        else:
-            json_paragraphs.append({"text": str(paragraph[0]), "score": paragraph[1]})
-    
-    print(json.dumps(json_paragraphs))
-    """
+
 if __name__ == "__main__":
     black_box()

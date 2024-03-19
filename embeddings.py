@@ -8,13 +8,6 @@ import gensim
 # embeddings usando word_2_vec
 
 
-
-
-
-
-
-
-
 def join_all_stanza_sentences(paragraphs, bert):
     ids_dict = {} # dicionario onde a chave é o id do paragrafo e tem uma lista com os ids das frases contidas no paragrafo
     sentence_id = 1

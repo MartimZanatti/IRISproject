@@ -7,12 +7,15 @@ import shutil
 
 
 
-def calculate_embeddings(doc, model_name_bert="stjiris/bert-large-portuguese-cased-legal-mlm-nli-sts-v1", sections=["fundamentação"], device="cpu"):
+def calculate_embeddings(doc, type, model_name_bert="stjiris/bert-large-portuguese-cased-legal-mlm-nli-sts-v1", sections=["fundamentação"], device="cpu"):
     considered_sections_text = []
     considered_sections_ids = []
     for p in doc.paragraphs:
         if p.zone in sections: #if the paragraph belong to the considered sections
-            considered_sections_text.append(p.text.get_text())
+            if type == "text":
+                considered_sections_text.append(p.text)
+            else:
+                considered_sections_text.append(p.text.get_text())
             considered_sections_ids.append(p.id)
 
     if device == 'cuda':

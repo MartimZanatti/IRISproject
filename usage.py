@@ -1,15 +1,23 @@
-from doc_class import doc_class, add_zones_to_paragraph_objects
+from Judgment import Judgment, add_zones_to_paragraph_objects
 import bilstm_crf
 from bilstm_utils import id2word
 from utils import check_sections_to_summarize, calculate_embeddings
 from lex_rank import lex_rank_emb
 
 
-def usage_one_doc(doc_name, italic=True, sections_to_summarize=["fundamentação"], sections_returned=["fundamentação"]):
+def usage_one_doc(doc_name, file_extension, italic=True, sections_to_summarize=["relatório", "fundamentação de facto", "fundamentação de direito"], sections_returned=["fundamentação de direito"]):
     paragraph_ids = []
-    best_ids = []
+
+    #define file extension
+    if file_extension == ".docx":
+        type = "docx"
+    elif file_extension == ".txt":
+        type = "text"
+    elif file_extension == ".html":
+        type = "html"
+
     # receives an judgment and divide the paragraphs into zones
-    output, doc = get_sections(doc_name, italic)
+    output, doc = get_sections(doc_name, type, italic)
 
     sections_to_summarize, section_added = check_sections_to_summarize(output, sections_to_summarize, sections_returned)
 
@@ -20,8 +28,8 @@ def usage_one_doc(doc_name, italic=True, sections_to_summarize=["fundamentação
     # add these zones in the paragraphs object
     add_zones_to_paragraph_objects(output, doc)
 
-    emb, considered_ids = calculate_embeddings(doc,
-                                               model_name_bert="stjiris/bert-large-portuguese-cased-legal-mlm-nli-sts-v1",
+    emb, considered_ids = calculate_embeddings(doc, type,
+                                               model_name_bert="stjiris/bert-large-portuguese-cased-legal-tsdae-gpl-nli-sts-v0",
                                                sections=sections_to_summarize,
                                                device="cpu")  # -> ((len(paragraphs), 1024), paragraphs ids used)
 
@@ -34,7 +42,7 @@ def usage_one_doc(doc_name, italic=True, sections_to_summarize=["fundamentação
 
     all_paragraphs, correspondet_zones = doc.get_best_paragraphs(paragraph_ids, output, scores)
 
-    return all_paragraphs, scores,
+    return all_paragraphs, scores
 
 
 
@@ -42,8 +50,8 @@ def usage_one_doc(doc_name, italic=True, sections_to_summarize=["fundamentação
 
 
 
-def get_sections(doc_name, italic, device="cpu"):
-    doc = doc_class(doc_name, italic)
+def get_sections(doc_name, type, italic, device="cpu"):
+    doc = Judgment(doc_name, type, italic)
 
     model = bilstm_crf.BiLSTMCRF.load("JudgmentModel/model.pth", device)
     model.eval()
@@ -51,8 +59,9 @@ def get_sections(doc_name, italic, device="cpu"):
     output = {"wrapper": "plaintext", "text": text_ids, "denotations": []}
 
     #secções pela ordem mais importante
-    sections_doc = {"fundamentação": [], "relatório": [], "decisão": [], "delimitação": [], "colectivo": [], "declaração": [], "cabeçalho": [], "foot-note": [], "título": []}
+    sections_doc = {"fundamentação de direito": [], "fundamentação de facto": [], "relatório": [], "decisão": [], "delimitação": [], "colectivo": [], "declaração": [], "cabeçalho": [], "foot-note": [], "título": []}
     sections = model.get_sections(all_text, device)
+    #print(sections)
     sections = sections[0][1:-1]
     sections_names = []
     for tag in sections:
@@ -65,8 +74,10 @@ def get_sections(doc_name, italic, device="cpu"):
             sections_doc["relatório"].append((section, ids[i]))
         elif section in ["B-delimitação", "I-delimitação"]:
             sections_doc["delimitação"].append((section, ids[i]))
-        elif section in ["B-fundamentação", "I-fundamentação"]:
-            sections_doc["fundamentação"].append((section, ids[i]))
+        elif section in ["B-fundamentação-facto", "I-fundamentação-facto"]:
+            sections_doc["fundamentação de facto"].append((section, ids[i]))
+        elif section in ["B-fundamentação-direito", "I-fundamentação-direito"]:
+            sections_doc["fundamentação de direito"].append((section, ids[i]))
         elif section in ["B-decisão", "I-decisão"]:
             sections_doc["decisão"].append((section, ids[i]))
         elif section in ["B-colectivo", "I-colectivo"]:
@@ -81,7 +92,7 @@ def get_sections(doc_name, italic, device="cpu"):
     id = 0
     for key, value in sections_doc.items():
         if len(value) != 0:
-            if key in ["cabeçalho", "relatório", "delimitação", "fundamentação", "decisão", "foot-note"]:
+            if key in ["cabeçalho", "relatório", "delimitação", "fundamentação de facto", "fundamentação de direito", "decisão", "foot-note"]:
                 output["denotations"].append(
                     {"id": id, "start": value[0][1][0], "end": value[-1][1][0], "start_char": value[0][1][1],
                      "end_char": value[-1][1][2], "type": key})
@@ -94,3 +105,6 @@ def get_sections(doc_name, italic, device="cpu"):
             id += 1
 
     return output, doc
+
+
+usage_one_doc("../IrisDataset/test_examples/teste.txt", ".txt")
