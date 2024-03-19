@@ -18,8 +18,10 @@ def send_report(path=None):
 @app.route("/", methods=["POST"])
 def handle_post():
     _, file_extension = os.path.splitext(request.files["file"].filename)
+    print(file_extension)
     uploaded_file = tempfile.NamedTemporaryFile(suffix=file_extension, delete=False)
     request.files["file"].save(uploaded_file)
+    # seccao = request.form.get("seccao") or "1_seccao"
     uploaded_file.flush()
     uploaded_file.close()
 

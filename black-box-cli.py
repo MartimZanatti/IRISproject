@@ -4,6 +4,7 @@ from usage import usage_one_doc
 
 @click.command()
 @click.argument('filename', type=click.Path(exists=True))
+
 def black_box(filename):
     json_paragraphs = []
     considered_paragraphs, scores = usage_one_doc(filename)

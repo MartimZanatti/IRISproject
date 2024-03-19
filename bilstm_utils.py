@@ -1,11 +1,12 @@
 import torch
 import pickle
-from emb_models import load_bert_model
+from emb_model import load_bert_model
 
 
-tag_vocab = {"pad": 0, "B-cabeçalho": 1, "I-cabeçalho": 2, "B-relatório": 3, "I-relatório": 4, "B-delimitação": 5, "I-delimitação" : 6, "B-fundamentação": 7, "I-fundamentação": 8, "B-decisão": 9,
-             "I-decisão": 10, "B-colectivo": 11, "I-colectivo": 12, "B-declaração": 13, "I-declaração": 14, "título": 15, "B-foot-note": 16, "I-foot-note": 17, "start": 18, "end": 19}
 
+tag_vocab_fundamentacao_separated = {"pad": 0, "B-cabeçalho": 1, "I-cabeçalho": 2, "B-relatório": 3, "I-relatório": 4, "B-delimitação": 5, "I-delimitação" : 6, "B-fundamentação-facto": 7, "I-fundamentação-facto": 8, "B-fundamentação-direito": 9,
+                                     "I-fundamentação-direito": 10, "B-decisão": 11, "I-decisão": 12, "B-colectivo": 13,
+                                     "I-colectivo": 14, "B-declaração": 15, "I-declaração": 16, "título": 17, "B-foot-note": 18, "I-foot-note": 19, "start": 20, "end": 21}
 
 def get_mask(tags, device):
     mask = torch.zeros((tags.shape[0], tags.shape[1]), device=device)
@@ -85,7 +86,7 @@ def create_embeddings_judgment(text, device):
     return X
 
 
-def id2word(tag, tag_vocab=tag_vocab):
+def id2word(tag, tag_vocab=tag_vocab_fundamentacao_separated):
     """ Transform a sentence or a list of sentences from int to str
     Args:
         origin: a sentence of type list[int], or a list of sentences of type list[list[int]]
