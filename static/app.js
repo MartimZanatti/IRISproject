@@ -96,6 +96,7 @@ function postFile(file) {
     showProgress("10%")
     let formData = new FormData();
     formData.append("file", file);
+
     fetch("./", {
         method: "POST",
         body: formData
