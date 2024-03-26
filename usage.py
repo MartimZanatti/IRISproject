@@ -107,4 +107,3 @@ def get_sections(doc_name, type, italic, device="cpu"):
     return output, doc
 
 
-usage_one_doc("../IrisDataset/test_examples/teste.txt", ".txt")
